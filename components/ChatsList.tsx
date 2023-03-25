@@ -29,7 +29,7 @@ function ChatsList({ userChats, setChatInfo }: {
     <div className='text-sm w-full'>
         <div className='m-8'>
             <div className='flex flex-row items-center justify-between'>
-                <h1 className='text-base'>
+                <h1 className='text-base w-32'>
                     My Chats
                 </h1>
                 <div className='
