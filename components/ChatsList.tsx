@@ -44,7 +44,7 @@ function ChatsList({ userChats, setChatInfo }: {
                         value={searchInput}
                         onChange={handleSearchChange}
                         type="input"
-                        placeholder="Search for contacts"
+                        placeholder="Search for chats..."
                         className="
                         w-full
                         pr-1

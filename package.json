@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev -H 192.168.1.245",
     "build": "next build",
-    "start": "next start -H 192.168.1.245",
+    "start": "next start HTTPS=true -H 192.168.1.245",
     "lint": "next lint",
     "electron": "electron .",
     "watch": "nodemon"

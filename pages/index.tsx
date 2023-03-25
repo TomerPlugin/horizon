@@ -7,6 +7,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import { DocumentData } from 'firebase/firestore'
 import Login from '@/components/Login'
 import Contacts from '@/components/Contacts'
+import VirtualRooms from '@/components/virtual-rooms/VirtualRooms'
 
 // const inter = Inter({ subsets: ['latin'] })
 
@@ -27,8 +28,8 @@ export default function Home() {
         return <Contacts mainSection={mainSection} setMainSection={setMainSection}
         chatInfo={chatInfo!} setChatInfo={setChatInfo} />
 
-      case ('Games'):
-        // return <Chat />
+      case ('Virtual Rooms'):
+        return <VirtualRooms />
     }
   }
   

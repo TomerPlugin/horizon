@@ -14,7 +14,7 @@ function TopBar({ mainSection }: {mainSection:string}) {
               return <ChatBubbleOvalLeftEllipsisIcon className='h-10 w-10 py-1.5'/>
             case ('Contacts'):
               return <IoMdContacts className='h-10 w-10 py-1.5'/>
-            case ('Games'):
+            case ('Virtual Rooms'):
               return <BsFillBoxFill className='h-10 w-10 py-1.5'/>
             case ('Options'):
             return <GiHamburgerMenu className='h-10 w-10 py-1.5'/>

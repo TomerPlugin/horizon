@@ -65,9 +65,9 @@ function SideBar({mainSection, setMainSection, chatInfo, setChatInfo}:
             sm:space-y-2
             '>
                 <BsFillBoxFill
-                title='Games'
-                onClick={() => setMainSection('Games')}
-                className={`clickable-icon ${mainSection === "Games" && 'icon-bg-hover'}`}
+                title='Virtual Rooms'
+                onClick={() => setMainSection('Virtual Rooms')}
+                className={`clickable-icon ${mainSection === "Virtual Rooms" && 'icon-bg-hover'}`}
                 />
                 
                 <IoMdContacts
