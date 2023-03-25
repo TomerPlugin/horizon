@@ -31,7 +31,7 @@ function TopBar({ mainSection }: {mainSection:string}) {
             </div>
 
             <div className='flex flex-row'>
-                <div className='
+                {/* <div className='
                 hidden sm:flex sm:flex-row
                 items-center
                 bg-color-2nd
@@ -47,7 +47,7 @@ function TopBar({ mainSection }: {mainSection:string}) {
                     <div>
                         <MagnifyingGlassIcon className='h-5 w-5'/>
                     </div>
-                </div>
+                </div> */}
 
                 <BellIcon className='h-10 w-10 mx-2 p-1
                 clickable-icon'/>

@@ -12,12 +12,6 @@ import Contacts from '@/components/Contacts'
 
 const initialMainSection = 'Chat'
 
-// interface ChatInfo {
-//   isGroup: boolean;
-//   title: string;
-//   users: [DocumentData]
-// }
-
 export default function Home() {
   const { loading, user } = useAuth()
   const [chatInfo, setChatInfo] = useState<DocumentData>()
@@ -60,20 +54,23 @@ export default function Home() {
 
       <div className='flex flex-col-reverse h-full sm:flex-row'>
 
-        <div className='flex flex-col-reverse h-full bottom-0 sm:flex-row sm:right-0 '>
-          <SideBar mainSection={mainSection} setMainSection={setMainSection}/>
+        <div className='flex flex-col-reverse sm:h-full sm:flex-row'>
+          <SideBar mainSection={mainSection}
+                  setMainSection={setMainSection}
+                  chatInfo={chatInfo}
+                  setChatInfo={setChatInfo}/>
           <div className='line' />
         </div>
 
-        <section className='flex flex-col w-full'>
+        <section className='flex flex-col h-full w-full'>
 
-          <div className='flex flex-col'>
+          <div className='flex flex-col w-full'>
             <TopBar mainSection={mainSection}/>
-          <div className='line' />
+            <div className='line' />
           </div>
 
           {
-            getMainSection()!
+            getMainSection()
           }
 
         </section>

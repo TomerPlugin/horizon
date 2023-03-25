@@ -3,13 +3,17 @@ import React, { Dispatch, FC, SetStateAction } from 'react'
 import { GiHamburgerMenu } from 'react-icons/gi'
 import { BsFillBoxFill } from 'react-icons/bs'
 import { IoMdContacts } from 'react-icons/io'
-import { ChatBubbleOvalLeftEllipsisIcon, MoonIcon, SunIcon } from '@heroicons/react/24/solid'
+import { ArrowSmallLeftIcon, ChatBubbleOvalLeftEllipsisIcon, MoonIcon, SunIcon } from '@heroicons/react/24/solid'
 import { useState } from 'react'
 import Chat from './Chat'
 
 let isDarkMode = true;
 
-function SideBar({mainSection, setMainSection}: {mainSection:string, setMainSection:Dispatch<SetStateAction<string>>}) {
+function SideBar({mainSection, setMainSection, chatInfo, setChatInfo}:
+                {mainSection: string,
+                setMainSection: Dispatch<SetStateAction<string>>,
+                chatInfo: any,
+                setChatInfo: Dispatch<SetStateAction<any>>}) {
     const [modeIcon, setModeIcon] = useState(getModeIcon);
 
     function getModeIcon() {
@@ -25,17 +29,31 @@ function SideBar({mainSection, setMainSection}: {mainSection:string, setMainSect
     }
 
     return (
-        <div className=' dragable
+        <div className='dragable
         flex sm:flex-col flex-row
         justify-between
-        sm:h-screen
         sm:p-5 p-2
         '>
+            
+            <ArrowSmallLeftIcon
+            title='Return'
+            onClick={() => setChatInfo('')}
+            className={`
+            clickable-icon
+            ${mainSection == 'Chat' && chatInfo ? "inline" : "hidden"}
+            lg:hidden
+            `}/>
+
             <GiHamburgerMenu
             title='Options'
             onClick={() => setMainSection('Options')}
-            className={`clickable-icon ${mainSection === "Options" && 'icon-bg-hover'}`}
-            />
+            className={`
+            clickable-icon
+            ${mainSection === "Options" && 'icon-bg-hover'}
+            ${mainSection == 'Chat' && chatInfo ? "hidden" : "inline"}
+            lg:inline
+            `}/>
+            
 
             <div className='
             h-full
@@ -47,7 +65,7 @@ function SideBar({mainSection, setMainSection}: {mainSection:string, setMainSect
             sm:space-y-2
             '>
                 <BsFillBoxFill
-                title='Contacts'
+                title='Games'
                 onClick={() => setMainSection('Games')}
                 className={`clickable-icon ${mainSection === "Games" && 'icon-bg-hover'}`}
                 />

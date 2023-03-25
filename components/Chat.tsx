@@ -17,6 +17,7 @@ function Chat({mainSection, setMainSection, chatInfo, setChatInfo}:
 
     const [messagesInfo, setMessagesInfo] = useState<any[]>([]);
     const [userChats, setUserChats] = useState<any[]>();
+    const [isInsideChat, setIsInsideChat] = useState(false)
 
     const [input, setInput] = useState('');
     const messagesEndRef = useRef<null | HTMLDivElement>(null)
@@ -178,86 +179,89 @@ function Chat({mainSection, setMainSection, chatInfo, setChatInfo}:
     }
 
     return (
-        <div className='flex flex-row h-full w-full'>
+        <div className='flex flex-row w-full justify-center'>
 
             { userChats && Object.entries(userChats)[0] &&
-            <div className='
+            <div className={`
             flex flex-row
-            min-w-[20rem]
-            w-[25rem]
-            hidden lg:inline
-            '>
+            lg:min-w-[20rem] lg:w-[25rem]
+            ${chatInfo ?
+                "hidden"
+                :
+                "w-[35rem] max-w-[30rem] lg:w-[35rem] lg:max-w-[30rem]"}
+            lg:inline
+            `}>
                 <ChatsList userChats={userChats} setChatInfo={setChatInfo} />
             </div>
             }
-
-            <div className='line h-full hidden md:inline' />
             
             { chatInfo &&
-            <div className='flex flex-col w-full'>
-
-                <div className='flex flex-row justify-between content-center p-8 p-5'>
-                    <div className='flex flex-col self-center'>
-                        <h1 className={`text-xl font-bold ${chatInfo?.isGroup && 'text-3xl font-bold'}`}>
-                            { chatInfo?.displayName}
-                        </h1>
-                        <div className='text-sm my-1 space-x-1 flex flex-row'>
-                            <p> Last seen </p>
-                            <p>
-                                <TimeAgo datetime={ chatInfo.lastSeen?.toDate()}/>
-                                ...
-                            </p>
+            <div className='flex flex-row w-full'>
+                <div className='line'/>
+                <div className='flex flex-col w-full sm:w-[calc(100vw-90px)] lg:w-[calc(100vw-410px)]'>
+                    <div className='flex flex-row justify-between content-cente p-5'>
+                        <div className='flex flex-col self-center'>
+                            <h1 className={`text-xl font-bold ${chatInfo?.isGroup && 'text-3xl font-bold'}`}>
+                                { chatInfo?.displayName}
+                            </h1>
+                            <div className='text-sm my-1 space-x-1 flex flex-row'>
+                                <p> Last seen </p>
+                                <p>
+                                    <TimeAgo datetime={ chatInfo.lastSeen?.toDate()}/>
+                                    ...
+                                </p>
+                            </div>
                         </div>
+                        
+                        <img src={chatInfo.photoURL!} width="600" height="600" title={chatInfo?.displayName ?? ''}
+                        className='
+                        h-12 w-12 mx-1 rounded-full
+                        outline-none
+                        outline
+                        hover:outline-gray-400
+                        active:outline-gray-600
+                        dark:active:outline-white
+                        transition ease-in-out duration-200
+                        cursor-pointer'
+                        />
                     </div>
-                    
-                    <img src={chatInfo.photoURL!} width="600" height="600" title={chatInfo?.displayName ?? ''}
-                    className='
-                    h-12 w-12 mx-1 rounded-full
-                    outline-none
-                    outline
-                    hover:outline-gray-400
-                    active:outline-gray-600
-                    dark:active:outline-white
-                    transition ease-in-out duration-200
-                    cursor-pointer'
-                    />
-                </div>
-            
-                <div className='line' /> 
+                
+                    <div className='line' /> 
 
-                <div className='flex flex-col'>
-                    <div ref={messagesEndRef} className='flex flex-col w-full 
-                    overflow-y-scroll h-[calc(100vh-295px)] sm:h-[calc(100vh-17rem)] scrollbar-hide
-                    px-5 py-2
-                    '>
-                        {messagesInfo && messagesInfo.map((m) => <Message username={m.username} message={m.message} />)}
-                    </div>
+                    <div className='flex flex-col'>
+                        <div ref={messagesEndRef} className='flex flex-col
+                        overflow-y-scroll h-[calc(100vh-295px)] sm:h-[calc(100vh-15.3rem)] scrollbar-hide
+                        px-5 py-2
+                        '>
+                            {messagesInfo && messagesInfo.map((m) => <Message username={m.username} message={m.message} />)}
+                        </div>
 
-                    <div className='
-                    flex flex-row
-                    items-center
-                    justify-between
-                    p-3
-                    '>
-                        <LinkIcon className='h-10 w-10 p-3 clickable' />
-                        <input value={input}
-                            onKeyDown={event => event.key === 'Enter' && handleAdd()}
-                            onChange={handleChange}
-                            placeholder="Write a message...  "
-                            className='
-                            bg-transparent
-                            w-full
-                            p-2 px-3
-                            mx-3
-                            text-sm
-                            outline outline-[1px]
-                            outline-black/40
-                            dark:outline-white/40
-                            focus:outline-black
-                            dark:focus:outline-white
-                            rounded-lg
-                        ' />
-                        <PaperAirplaneIcon onClick={handleAdd} className='h-10 w-10 p-3 clickable' />
+                        <div className='
+                        flex flex-row
+                        items-center
+                        justify-between
+                        m-3
+                        '>
+                            <LinkIcon className='h-10 w-10 p-3 clickable' />
+                            <input value={input}
+                                onKeyDown={event => event.key === 'Enter' && handleAdd()}
+                                onChange={handleChange}
+                                placeholder="Write a message...  "
+                                className='
+                                bg-transparent
+                                w-full
+                                p-2 px-3
+                                mx-3
+                                text-sm
+                                outline outline-[1px]
+                                outline-black/40
+                                dark:outline-white/40
+                                focus:outline-black
+                                dark:focus:outline-white
+                                rounded-lg
+                            ' />
+                            <PaperAirplaneIcon onClick={handleAdd} className='h-10 w-10 p-3 clickable' />
+                        </div>
                     </div>
                 </div>
             </div>
