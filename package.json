@@ -2,11 +2,11 @@
   "name": "horizon",
   "version": "0.1.0",
   "private": true,
-  "main": "./pages/electron/main.tsx",
+  "main": "./electron/main.tsx",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 192.168.1.245",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -H 192.168.1.245",
     "lint": "next lint",
     "electron": "electron .",
     "watch": "nodemon"
@@ -16,6 +16,7 @@
     "@types/node": "18.15.3",
     "@types/react": "18.0.28",
     "@types/react-dom": "18.0.11",
+    "@types/react-router": "^5.1.20",
     "electron": "^23.1.4",
     "firebase": "^9.18.0",
     "heroicons": "^2.0.16",
@@ -23,13 +24,21 @@
     "nodemon": "^2.0.21",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-hook-form": "^7.43.7",
     "react-icons": "^4.8.0",
+    "react-spinners": "^0.13.8",
     "tailwind": "^4.0.0",
+    "timeago-react": "^3.0.6",
     "typescript": "5.0.2"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.21",
     "tailwindcss": "^3.2.7"
+  },
+  "browser": {
+    "fs": false,
+    "path": false,
+    "os": false
   }
 }

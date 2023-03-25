@@ -21,7 +21,7 @@ const createWindow = () => {
   });
 
   // mainWindow.loadFile(path.join(__dirname, '/index.html'));
-  mainWindow.loadURL('http://localhost:3000');
+  mainWindow.loadURL('http://192.168.1.245:3000');
   mainWindow.once('ready-to-show', mainWindow.show);
 };
 

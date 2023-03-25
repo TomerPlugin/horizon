@@ -1,24 +1,34 @@
+import useAuth from '@/hooks/useAuth'
 import React from 'react'
 
-function Message() {
-  return (
-    <div className='
-    flex flex-col
-    bg-color-2nd
-    w-max
-    rounded-xl
-    py-2 px-5
-    mb-2
-    shadow-md
-    '>
-        <p className='text-main-color text-xs font-bold'>
-          ~ Tomer Haik
-        </p>
-        <p className='text-main-color text-sm'>
-          Are you ready for the next lesson?
-        </p>
-    </div>
-  )
+function Message({username, message}: {username:string, message:string}) {
+  const { user } = useAuth()
+
+  if(username == user?.displayName)
+  {
+    return (
+      <div className='w-full flex flex-row justify-end'>
+        <div className='message bg-[#97DFFC]/80 dark:bg-sky-400/60 dark:shadow-white/20'>
+            <p className='text-main-color text-sm'>
+              {message}
+            </p>
+        </div>
+      </div>
+    )
+  } else {
+    return (
+      <div>
+        <div className='message'>
+            <p className='text-main-color text-xs font-bold'>
+              ~ {username}
+            </p>
+            <p className='text-main-color text-sm'>
+              {message}
+            </p>
+        </div>
+      </div>
+    )
+  }
 }
 
 export default Message

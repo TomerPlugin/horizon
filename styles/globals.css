@@ -85,16 +85,20 @@
 
 html,
 body {
-  -webkit-app-region: drag;
   max-width: 100vw;
   overflow-x: hidden;
 }
+
 
 a, button, input, textarea, select, option, img, .clickable-icon, .clickable {
   -webkit-app-region: no-drag;
 }
 
-h1, h2, h3, h4, h5, h6, p, a, img {
+SideBar {
+  -webkit-app-region: drag;
+}
+
+h1, h2, h3, h4, h5, h6, a, img {
   -webkit-user-select: none;
 }
 
@@ -118,8 +122,6 @@ a {
     @apply
     font-sans
     text-base
-    text-gray-900
-    dark:text-gray-50
     scrollbar-hide
   }
   
@@ -141,6 +143,39 @@ a {
 }
 
 @layer components {
+
+  .message {
+    @apply
+    flex flex-col
+    break-words
+    max-w-full
+    bg-color-2nd
+    w-max
+    rounded-xl
+    py-2 px-5
+    mt-2
+    shadow-md
+    dark:shadow-gray-700/40
+  }
+  
+  .dragable {
+    -webkit-app-region: drag;
+  }
+  .chat-area {
+    @apply
+    scroll-auto
+  }
+
+  .input {
+    @apply
+    w-full
+    py-3 p-4
+    rounded-md
+    focus:shadow-lg
+    bg-color-2nd
+    outline-none
+  }
+
   .clickable {
     @apply 
     hover:bg-gray-200
@@ -156,17 +191,19 @@ a {
     rounded-md
   }
 
+  .icon-bg-hover {
+    @apply
+    bg-gray-200
+    dark:bg-gray-700
+  }
+
   .clickable-icon {
     @apply h-12 w-12 p-3
     rounded-md
     
-    hover:bg-gray-200
-    dark:hover:bg-gray-600
+    hover:icon-bg-hover
 
     hover:shadow
-    
-    hover:bg-gray-200
-    dark:hover:bg-gray-600
 
     active:bg-gray-300
     dark:active:bg-gray-400
@@ -194,8 +231,13 @@ a {
     text-sky-900
     dark:text-sky-200
 
-    focus:bg-sky-400
+    focus:bg-sky-300
     dark:focus:bg-sky-600
+
+    hover:shadow-md
+    focus:shadow-md
+
+    dark:shadow-white
 
     my-6 mr-3
     p-[4px] px-3

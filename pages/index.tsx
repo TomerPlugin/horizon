@@ -1,46 +1,80 @@
 import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from '@/styles/Home.module.css'
-import Link from 'next/link'
-import SideBar from '@/components/SideBar'
-import TopBar from '@/components/TopBar'
+import useAuth from '../hooks/useAuth'
 import Chat from '@/components/Chat'
-import ChatsList from '@/components/ChatsList'
+import TopBar from '@/components/TopBar'
+import SideBar from '@/components/SideBar'
+import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { DocumentData } from 'firebase/firestore'
+import Login from '@/components/Login'
+import Contacts from '@/components/Contacts'
 
-const inter = Inter({ subsets: ['latin'] })
+// const inter = Inter({ subsets: ['latin'] })
+
+const initialMainSection = 'Chat'
+
+// interface ChatInfo {
+//   isGroup: boolean;
+//   title: string;
+//   users: [DocumentData]
+// }
 
 export default function Home() {
+  const { loading, user } = useAuth()
+  const [chatInfo, setChatInfo] = useState<DocumentData>()
+  const [ mainSection, setMainSection ] = useState(initialMainSection)
+
+  function getMainSection() {
+    switch(mainSection) {
+      case ('Chat'):
+        return <Chat mainSection={mainSection} setMainSection={setMainSection}
+        chatInfo={chatInfo!} setChatInfo={setChatInfo} />
+
+      case ('Contacts'):
+        return <Contacts mainSection={mainSection} setMainSection={setMainSection}
+        chatInfo={chatInfo!} setChatInfo={setChatInfo} />
+
+      case ('Games'):
+        // return <Chat />
+    }
+  }
+  
+  if(!user) return <Login />
+  else if(!user.displayName) return 
+
+  // useEffect(() => {    
+  //   if(user) {
+  //     setDoc(doc(db, "users", user.uid), {
+  //       email: user.email,
+  //       lastSeen: serverTimestamp(),
+  //       photoUrl: user.photoURL
+  //     }, { merge: true });
+  //   }
+  // })
+
   return (
-    <div className='bg-main-color h-screen'>
+    <div className='bg-main-color text-main-color h-screen'>
       <Head>
         <title>Home - Horizon</title>
-        <link rel="icon" href="\favicon.ico" />
+        <link rel="icon" href="images\whale-tail.png" />
       </Head>
 
-      <div className='flex flex-col-reverse sm:flex-row'>
+      <div className='flex flex-col-reverse h-full sm:flex-row'>
 
-        <div className='flex flex-col-reverse sm:flex-row'>
-          <SideBar />
+        <div className='flex flex-col-reverse h-full bottom-0 sm:flex-row sm:right-0 '>
+          <SideBar mainSection={mainSection} setMainSection={setMainSection}/>
           <div className='line' />
         </div>
 
         <section className='flex flex-col w-full'>
 
           <div className='flex flex-col'>
-            <TopBar />
-            <div className='line' />
+            <TopBar mainSection={mainSection}/>
+          <div className='line' />
           </div>
 
-          <div className='flex flex-row'>
-          
-            <div className='flex flex-row'>
-              <ChatsList />
-              <div className='line hidden md:inline' />
-            </div>
-
-            <Chat />
-          </div>
+          {
+            getMainSection()!
+          }
 
         </section>
       </div>
