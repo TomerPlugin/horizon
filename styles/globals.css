@@ -143,6 +143,14 @@ a {
 }
 
 @layer components {
+  .video {
+    @apply
+    w-full
+    h-full
+    object-cover
+    rounded-2xl
+    aspect-video	
+  }
 
   .message {
     @apply

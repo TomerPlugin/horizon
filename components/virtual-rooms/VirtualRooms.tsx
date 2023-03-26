@@ -10,7 +10,8 @@ function VirtualRooms() {
     const [section, setSection] = useState<any>()
     
     useEffect(() => {
-        setSection(<InitialVirtualRoomsOptions setSection={setSection}/>)
+        setSection(<VirtualRoom title=''/>)
+        // setSection(<InitialVirtualRoomsOptions setSection={setSection}/>)
     }, [])
     
     return (
