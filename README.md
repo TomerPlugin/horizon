@@ -4,11 +4,11 @@ Welcome to the Horizon repository! Horizon is a chat app that enables secure and
 
 ## Features
 
-- Multi-user conference rooms: Users can join existing conference rooms or create their own to chat with multiple people at once.
-- Real-time messaging: Messages are sent and received in real-time, allowing for seamless communication between users.
-- Video and audio calling: Users can make video and audio calls within conference rooms using WebRTC technology.
-- Screen sharing: Users can share their screens with other users within conference rooms for collaborative work and presentations.
-- Secure authentication: Horizon includes secure user authentication, ensuring only authorized users can access the app and its features.
+- **Multi-user conference rooms**: Users can join existing conference rooms or create their own to chat with multiple people at once.
+- **Real-time messaging**: Messages are sent and received in real-time, allowing for seamless communication between users.
+- **Video and audio calling**: Users can make video and audio calls within conference rooms using WebRTC technology.
+- **Screen sharing**: Users can share their screens with other users within conference rooms for collaborative work and presentations.
+- **Secure authentication**: Horizon includes secure user authentication, ensuring only authorized users can access the app and its features.
 
 ## Technologies Used
 
