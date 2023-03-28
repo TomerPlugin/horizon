@@ -1,4 +1,4 @@
-# Horizon: Secure and Fast Multi-User Chat App with React and WebRTC
+# Horizon: Fast, Secure, and User-Friendly Multi-User Chat App
 
 Welcome to the Horizon repository! Horizon is a chat app that enables secure and fast communication with multi-user conference rooms, built with React and WebRTC technologies.
 
@@ -17,7 +17,7 @@ Horizon was built with the following technologies:
 - React: A popular JavaScript library for building user interfaces.
 - WebRTC: A set of APIs for real-time communication between browsers.
 - Firebase: A cloud-based platform for building mobile and web applications.
-- Styled Components: A CSS-in-JS library for styling React components.
+- Tailwind: A utility-first CSS framework for quickly building custom user interfaces.
 
 ## Getting Started
 
