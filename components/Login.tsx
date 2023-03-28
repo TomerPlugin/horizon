@@ -26,8 +26,8 @@ function Login() {
                 <h1 className='hidden md:inline text-2xl font-light '>HORIZON</h1>
             </div>
 
-            <div className='flex flex-row w-full justify-center'>
-                <div className='flex flex-col mt-[calc((100vh-500px)/2)] w-full max-w-[450px] sm:w-[450px]'>   
+            <div className='flex flex-row w-full h-full justify-center'>
+                <div className='flex flex-col justify-center w-full max-w-[450px] sm:w-[450px]'>   
                     <div className='flex flex-col w-full px-5'>
                         <div className='flex flex-row'>
                         {

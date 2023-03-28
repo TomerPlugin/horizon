@@ -21,6 +21,7 @@ interface Inputs {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className='
     w-full
+    mt-[-5rem]
    text-black
     rounded-md
     flex flex-col

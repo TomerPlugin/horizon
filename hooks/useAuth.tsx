@@ -90,6 +90,14 @@ export const AuthProvider = ({children}:AuthProviderProps) => {
 
         await createUserWithEmailAndPassword(auth, email, password).then(async (userCredential) => {
             updateProfile(userCredential.user, { displayName: username})
+
+            await setDoc(doc(db, "users", userCredential.user.uid), {
+                uid: userCredential.user.uid,
+                displayName: username,
+                email: userCredential.user.email,
+                lastSeen: serverTimestamp(),
+                photoURL: userCredential.user.photoURL
+            }, { merge: true })
             
             setUser(userCredential.user)
 

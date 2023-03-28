@@ -9,7 +9,7 @@ function CreateRoomForm({setSection}: {setSection:any}) {
   }
 
   function createNewRoom(title: string) {
-    setSection(<VirtualRoom title={title} />)
+    setSection(<VirtualRoom mode='create' initialRoomId='' title={title} />)
   }
 
   return (

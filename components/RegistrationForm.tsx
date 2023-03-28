@@ -30,7 +30,7 @@ function LoginForm({setIsLogin}: {setIsLogin:React.Dispatch<React.SetStateAction
 
       <div className='flex flex-col py-4 space-y-4'>
         <label className='inline-block'>
-          <input {...register('username', {required:true})} type="text" placeholder="Enter a username..." className='input' />
+          <input {...register('username', {required:true})} type="username" placeholder="Enter a username..." className='input' />
           {errors.email && <p className=' p-1 text-[13px] font-normal text-orange-700'>
             Please enter a valid username.
             </p>}

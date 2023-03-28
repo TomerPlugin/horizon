@@ -32,6 +32,7 @@ function SideBar({mainSection, setMainSection, chatInfo, setChatInfo}:
         <div className='dragable
         flex sm:flex-col flex-row
         justify-between
+        bg-main-color
         sm:p-5 p-2
         '>
             

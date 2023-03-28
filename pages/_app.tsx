@@ -4,6 +4,8 @@ import useAuth, { AuthProvider } from '../hooks/useAuth'
 import { auth } from '@/firebase'
 import Login from '@/components/Login';
 import Loading from '@/components/Loading'
+import { store } from '../store/store'
+import { Provider } from 'react-redux'
 
 export default function App({ Component, pageProps }: AppProps) {
   const {user, loading} = useAuth();
@@ -12,8 +14,10 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     // HOC
-    <AuthProvider>
-      <Component {...pageProps} />
-    </AuthProvider>
+    <Provider store={store}>
+      <AuthProvider>
+        <Component {...pageProps} />
+      </AuthProvider>
+      </Provider>
   )
 }
