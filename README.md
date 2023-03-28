@@ -1,6 +1,10 @@
+<p align="center">
+  <img src="https://cdn-icons-png.flaticon.com/512/74/74525.png" alt="Horizon Icon" width="128" height="128" />
+</p>
+
 # Horizon: Fast, Secure, and User-Friendly Chat & Confrence Web Application
 
-Welcome to the Horizon repository! Horizon is a chat app that enables secure and fast communication with multi-user conference rooms, built with React, Firebase and WebRTC.
+Horizon is an online web-based chat application that enables secure and fast communication with multi-user conference rooms, built with React, Firebase and WebRTC.
 
 ## Features
 
