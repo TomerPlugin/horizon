@@ -1,6 +1,6 @@
 # Horizon: Fast, Secure, and User-Friendly Chat & Confrence Web Application
 
-Welcome to the Horizon repository! Horizon is a chat app that enables secure and fast communication with multi-user conference rooms, built with React and WebRTC technologies.
+Welcome to the Horizon repository! Horizon is a chat app that enables secure and fast communication with multi-user conference rooms, built with React, Firebase and WebRTC.
 
 ## Features
 
