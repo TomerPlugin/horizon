@@ -27,12 +27,6 @@ function Chat({chatInfo, setChatInfo}:
     const messagesEndRef = useRef<null | HTMLDivElement>(null)
 
     useEffect(() => {
-        return () => {
-            dispatch(setMainPageTitle('Chat'))
-        }
-    }, [])
-
-    useEffect(() => {
         user?.uid && onSnapshot(doc(db, 'userChats', user?.uid!), (userChatsDoc: any) => {
             setUserChats(userChatsDoc.data())
             // console.log(userChatsDoc.data())

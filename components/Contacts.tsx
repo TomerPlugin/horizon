@@ -20,12 +20,6 @@ function Contacts({chatInfo, setChatInfo}:
     const { user } = useAuth()
 
     useEffect(() => {
-        return () => {
-            dispatch(setMainPageTitle('Contacts'))
-        }
-    }, [])
-
-    useEffect(() => {
         onSnapshot(collection(db, 'users'), (usersSnapshot: any) => {
             let usersData: any = [];
             

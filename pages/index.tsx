@@ -8,14 +8,11 @@ import { DocumentData } from 'firebase/firestore'
 import Login from '@/components/Login'
 import Contacts from '@/components/Contacts'
 import VirtualRooms from '@/components/virtual-rooms/VirtualRooms'
-import { useDispatch, useSelector } from 'react-redux'
-import { RootState } from '@/store/store'
+import { useSelector } from 'react-redux'
 import { selectMainPage } from '@/store/slices/mainPageSlice'
 import Loading from '@/components/Loading'
 
 // const inter = Inter({ subsets: ['latin'] })
-
-const initialMainSection = ''
 
 export default function Home() {
   const { loading, user } = useAuth()
@@ -23,7 +20,7 @@ export default function Home() {
   const mainPage = useSelector(selectMainPage)
 
   if(loading) return <Loading />
-  if(!user) return <Login />
+  else if(!user) return <Login />
 
   // useEffect(() => {    
   //   if(user) {

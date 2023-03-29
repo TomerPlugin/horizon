@@ -11,6 +11,7 @@ import { RootState } from '@/store/store'
 import { selectMainPage, setMainPageComponent, setMainPageTitle } from '@/store/slices/mainPageSlice'
 import Contacts from './Contacts'
 import VirtualRooms from './virtual-rooms/VirtualRooms'
+import { selectVirtualRoom } from '@/store/slices/virtualRoomSlice'
 
 let isDarkMode = true;
 
@@ -20,23 +21,16 @@ function SideBar({ chatInfo, setChatInfo}:
 
     const [modeIcon, setModeIcon] = useState(getModeIcon);
     const mainPage = useSelector(selectMainPage)
+    const virtualRoom = useSelector(selectVirtualRoom)
     const dispatch = useDispatch()
 
-    function handleBtnClick(desiredPage: string) {
-        switch(desiredPage) {
-            case ('Chat'):
-                dispatch(setMainPageComponent(<Chat chatInfo={chatInfo!} setChatInfo={setChatInfo} />))
-            case ('Contacts'):
-                dispatch(setMainPageComponent(<Contacts chatInfo={chatInfo!} setChatInfo={setChatInfo} />))
-            case ('Virtual Rooms'):
-                dispatch(setMainPageComponent(<VirtualRooms />))
-            case ('Options'):
-                dispatch(setMainPageComponent(<></>))
-                dispatch(setMainPageTitle('Options'))
-            default:
-                dispatch(setMainPageComponent(<></>))
-                dispatch(setMainPageTitle(''))
-          }
+    function handleBtnClick(page: string) {
+        dispatch(setMainPageTitle(page))
+
+        if(page === 'Chat'){dispatch(setMainPageComponent(<Chat chatInfo={chatInfo!} setChatInfo={setChatInfo} />)) }
+        else if(page === 'Contacts') dispatch(setMainPageComponent(<Contacts chatInfo={chatInfo!} setChatInfo={setChatInfo} />))
+        else if(page === 'Virtual Rooms') dispatch(setMainPageComponent(<VirtualRooms />))
+        else if(page === 'Options') dispatch(setMainPageComponent(<></>))
     }
 
     function getModeIcon() {

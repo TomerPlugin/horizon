@@ -22,7 +22,7 @@ function TopBar() {
             case ('Virtual Rooms'):
               return <BsFillBoxFill className='h-10 w-10 py-1.5'/>
             case ('Options'):
-            return <GiHamburgerMenu className='h-10 w-10 py-1.5'/>
+                return <GiHamburgerMenu className='h-10 w-10 py-1.5'/>
         }
     }
         

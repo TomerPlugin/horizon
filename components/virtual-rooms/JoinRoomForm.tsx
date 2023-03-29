@@ -1,8 +1,18 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import VirtualRoom from './VirtualRoom'
+import { setMainPageComponent, setMainPageTitle } from '@/store/slices/mainPageSlice'
+import { useDispatch } from 'react-redux'
+import { setId } from '@/store/slices/virtualRoomSlice'
 
-function JoinRoomForm({setSection}: {setSection:any}) {
+function JoinRoomForm() {
   const [input, setInput] = useState('')
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+      return () => {
+          setMainPageTitle('Virtual Room: Join Room Form')
+      }
+  })
 
   function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
     setInput(event.target.value)
@@ -13,7 +23,8 @@ function JoinRoomForm({setSection}: {setSection:any}) {
   }
 
   function joinRoom() {
-    setSection(<VirtualRoom mode='join' initialRoomId={input} title='' />)
+    dispatch(setId(input))
+    dispatch(setMainPageComponent(<VirtualRoom mode='join'/>))
     
   }
 

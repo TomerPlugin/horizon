@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit'
 import mainPageReducer from './slices/mainPageSlice'
+import virtualRoomReducer from './slices/virtualRoomSlice'
 
 export const store = configureStore({
   reducer: {
     mainPage: mainPageReducer,
+    virtualRoom: virtualRoomReducer,
   },
 })
 
