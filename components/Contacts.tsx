@@ -4,14 +4,26 @@ import { db } from '@/firebase';
 import TimeAgo from 'timeago-react';
 import useAuth from '@/hooks/useAuth';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
+import { RootState } from '@/store/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { setMainPageComponent, setMainPageTitle } from '@/store/slices/mainPageSlice';
+import Chat from './Chat';
 
-function Contacts({mainSection, setMainSection, chatInfo, setChatInfo}:
-    {mainSection:string, setMainSection:Dispatch<SetStateAction<string>>,
-    chatInfo:DocumentData, setChatInfo:Dispatch<SetStateAction<DocumentData>>}) {
+function Contacts({chatInfo, setChatInfo}:
+    {chatInfo:DocumentData, setChatInfo:Dispatch<SetStateAction<DocumentData>>}) {
+
+    const mainPage = useSelector((state: RootState) => state.mainPage)
+    const dispatch = useDispatch()
 
     const [usersList, setUsersList] = useState<any[]>(getUsers())
     const [searchInput, setSearchInput] = useState('')
     const { user } = useAuth()
+
+    useEffect(() => {
+        return () => {
+            dispatch(setMainPageTitle('Contacts'))
+        }
+    }, [])
 
     useEffect(() => {
         onSnapshot(collection(db, 'users'), (usersSnapshot: any) => {
@@ -38,7 +50,7 @@ function Contacts({mainSection, setMainSection, chatInfo, setChatInfo}:
 
     function handleUserSelect(userSelected: any) {
         setChatInfo(userSelected)
-        setMainSection('Chat')
+        dispatch(setMainPageComponent(<Chat chatInfo={chatInfo} setChatInfo={setChatInfo} />))
     }
 
     function handleSearchChange(event: React.ChangeEvent<HTMLInputElement>) {

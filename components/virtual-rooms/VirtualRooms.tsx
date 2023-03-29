@@ -4,19 +4,27 @@ import { PlusCircleIcon } from '@heroicons/react/24/outline'
 import { CgPassword } from 'react-icons/cg'
 import InitialVirtualRoomsOptions from './InitialVirtualRoomsOptions'
 import JoinRoomForm from './JoinRoomForm'
+import { useDispatch, useSelector } from 'react-redux'
+import { selectMainPage, setMainPageTitle } from '@/store/slices/mainPageSlice'
 
 function VirtualRooms() {
-    const [isInRoom, setIsInRoom] = useState(false)
-    const [section, setSection] = useState<any>()
-    
+    const mainPage = useSelector(selectMainPage)
+    const dispatch = useDispatch()
+
     useEffect(() => {
-        // setSection(<VirtualRoom mode='' title=''/>)
-        setSection(<InitialVirtualRoomsOptions setSection={setSection}/>)
+        return () => {
+            dispatch(setMainPageTitle('Virtual Rooms'))
+        }
     }, [])
+
+    function getMainSection() {
+        if(mainPage.title.includes('Virtual Rooms'))
+            return mainPage.component
+    }
     
     return (
         <div className='w-full h-full'>
-            {section}
+            {getMainSection()}
         </div>
     )
 }

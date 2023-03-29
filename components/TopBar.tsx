@@ -4,12 +4,17 @@ import { IoMdContacts } from 'react-icons/io'
 import { ChatBubbleOvalLeftEllipsisIcon, MagnifyingGlassIcon, BellIcon} from '@heroicons/react/24/solid'
 import useAuth from '../hooks/useAuth'
 import { GiHamburgerMenu } from 'react-icons/gi'
+import { useDispatch, useSelector } from 'react-redux'
+import { selectMainPage } from '@/store/slices/mainPageSlice'
 
-function TopBar({ mainSection }: {mainSection:string}) {
+function TopBar() {
+
     const { logout, user } = useAuth()
+    const mainPage = useSelector(selectMainPage)
+    const dispatch = useDispatch()
 
     function getSectionIcon() {
-        switch(mainSection) {
+        switch(mainPage.title) {
             case ('Chat'):
               return <ChatBubbleOvalLeftEllipsisIcon className='h-10 w-10 py-1.5'/>
             case ('Contacts'):
@@ -27,7 +32,7 @@ function TopBar({ mainSection }: {mainSection:string}) {
                 {
                     getSectionIcon()
                 }
-                <h2 className='mx-1 font-semibold'>{mainSection}</h2>
+                <h2 className='mx-1 font-semibold'>{mainPage.title}</h2>
             </div>
 
             <div className='flex flex-row'>

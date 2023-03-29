@@ -3,38 +3,27 @@ import useAuth from '../hooks/useAuth'
 import Chat from '@/components/Chat'
 import TopBar from '@/components/TopBar'
 import SideBar from '@/components/SideBar'
-import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { DocumentData } from 'firebase/firestore'
 import Login from '@/components/Login'
 import Contacts from '@/components/Contacts'
 import VirtualRooms from '@/components/virtual-rooms/VirtualRooms'
+import { useDispatch, useSelector } from 'react-redux'
+import { RootState } from '@/store/store'
+import { selectMainPage } from '@/store/slices/mainPageSlice'
+import Loading from '@/components/Loading'
 
 // const inter = Inter({ subsets: ['latin'] })
 
-const initialMainSection = 'Chat'
+const initialMainSection = ''
 
 export default function Home() {
   const { loading, user } = useAuth()
   const [chatInfo, setChatInfo] = useState<DocumentData>()
-  const [ mainSection, setMainSection ] = useState(initialMainSection)
+  const mainPage = useSelector(selectMainPage)
 
-  function getMainSection() {
-    switch(mainSection) {
-      case ('Chat'):
-        return <Chat mainSection={mainSection} setMainSection={setMainSection}
-        chatInfo={chatInfo!} setChatInfo={setChatInfo} />
-
-      case ('Contacts'):
-        return <Contacts mainSection={mainSection} setMainSection={setMainSection}
-        chatInfo={chatInfo!} setChatInfo={setChatInfo} />
-
-      case ('Virtual Rooms'):
-        return <VirtualRooms />
-    }
-  }
-  
+  if(loading) return <Loading />
   if(!user) return <Login />
-  else if(!user.displayName) return 
 
   // useEffect(() => {    
   //   if(user) {
@@ -56,9 +45,7 @@ export default function Home() {
       <div className='flex flex-col-reverse h-full sm:flex-row'>
 
         <div className='flex flex-col-reverse sm:h-full sm:flex-row'>
-          <SideBar mainSection={mainSection}
-                  setMainSection={setMainSection}
-                  chatInfo={chatInfo}
+          <SideBar chatInfo={chatInfo}
                   setChatInfo={setChatInfo}/>
           <div className='line' />
         </div>
@@ -66,12 +53,12 @@ export default function Home() {
         <section className='flex flex-col h-full w-full'>
 
           <div className='flex flex-col w-full'>
-            <TopBar mainSection={mainSection}/>
+            <TopBar />
             <div className='line' />
           </div>
 
           {
-            getMainSection()
+            mainPage.component
           }
 
         </section>

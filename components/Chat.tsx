@@ -6,21 +6,31 @@ import ChatsList from './ChatsList'
 import { DocumentData, Timestamp, collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '@/firebase'
 import TimeAgo from 'timeago-react'
+import { useDispatch, useSelector } from 'react-redux'
+import { RootState } from '@/store/store'
+import { selectMainPage, setMainPageTitle } from '@/store/slices/mainPageSlice'
 
 // let initialMessagesInfo = [{"username":"Tomer Haik", "message":"Are you ready for the next lesson?"}]
 
-function Chat({mainSection, setMainSection, chatInfo, setChatInfo}:
-    {mainSection:string, setMainSection:Dispatch<SetStateAction<string>>,
-    chatInfo:any | null, setChatInfo:Dispatch<SetStateAction<any>>}) {
+function Chat({chatInfo, setChatInfo}:
+    {chatInfo:any | null, setChatInfo:Dispatch<SetStateAction<any>>}) {
 
     const { user } = useAuth()
 
+    const mainPage = useSelector(selectMainPage)
+    const dispatch = useDispatch()
+
     const [messagesInfo, setMessagesInfo] = useState<any[]>([]);
     const [userChats, setUserChats] = useState<any[]>();
-    const [isInsideChat, setIsInsideChat] = useState(false)
 
     const [input, setInput] = useState('');
     const messagesEndRef = useRef<null | HTMLDivElement>(null)
+
+    useEffect(() => {
+        return () => {
+            dispatch(setMainPageTitle('Chat'))
+        }
+    }, [])
 
     useEffect(() => {
         user?.uid && onSnapshot(doc(db, 'userChats', user?.uid!), (userChatsDoc: any) => {
@@ -207,13 +217,13 @@ function Chat({mainSection, setMainSection, chatInfo, setChatInfo}:
                             <div className='text-sm my-1 space-x-1 flex flex-row'>
                                 <p> Last seen </p>
                                 <p>
-                                    <TimeAgo datetime={ chatInfo.lastSeen?.toDate()}/>
+                                    <TimeAgo datetime={chatInfo.lastSeen?.toDate()}/>
                                     ...
                                 </p>
                             </div>
                         </div>
                         
-                        <img src={chatInfo.photoURL!} width="600" height="600" title={chatInfo?.displayName ?? ''}
+                        <img src={chatInfo.photoURL} width="600" height="600" title={chatInfo?.displayName ?? ''}
                         className='
                         h-12 w-12 mx-1 rounded-full
                         outline-none

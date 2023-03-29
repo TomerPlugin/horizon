@@ -6,19 +6,42 @@ import { IoMdContacts } from 'react-icons/io'
 import { ArrowSmallLeftIcon, ChatBubbleOvalLeftEllipsisIcon, MoonIcon, SunIcon } from '@heroicons/react/24/solid'
 import { useState } from 'react'
 import Chat from './Chat'
+import { useDispatch, useSelector } from 'react-redux'
+import { RootState } from '@/store/store'
+import { selectMainPage, setMainPageComponent, setMainPageTitle } from '@/store/slices/mainPageSlice'
+import Contacts from './Contacts'
+import VirtualRooms from './virtual-rooms/VirtualRooms'
 
 let isDarkMode = true;
 
-function SideBar({mainSection, setMainSection, chatInfo, setChatInfo}:
-                {mainSection: string,
-                setMainSection: Dispatch<SetStateAction<string>>,
-                chatInfo: any,
+function SideBar({ chatInfo, setChatInfo}:
+                {chatInfo: any,
                 setChatInfo: Dispatch<SetStateAction<any>>}) {
+
     const [modeIcon, setModeIcon] = useState(getModeIcon);
+    const mainPage = useSelector(selectMainPage)
+    const dispatch = useDispatch()
+
+    function handleBtnClick(desiredPage: string) {
+        switch(desiredPage) {
+            case ('Chat'):
+                dispatch(setMainPageComponent(<Chat chatInfo={chatInfo!} setChatInfo={setChatInfo} />))
+            case ('Contacts'):
+                dispatch(setMainPageComponent(<Contacts chatInfo={chatInfo!} setChatInfo={setChatInfo} />))
+            case ('Virtual Rooms'):
+                dispatch(setMainPageComponent(<VirtualRooms />))
+            case ('Options'):
+                dispatch(setMainPageComponent(<></>))
+                dispatch(setMainPageTitle('Options'))
+            default:
+                dispatch(setMainPageComponent(<></>))
+                dispatch(setMainPageTitle(''))
+          }
+    }
 
     function getModeIcon() {
-        return isDarkMode ? <MoonIcon className='clickable-icon' onClick={changeMode} />
-            : <SunIcon className='clickable-icon' onClick={changeMode} />
+        return isDarkMode ? <MoonIcon title="Change To Dark Mode" className='clickable-icon' onClick={changeMode} />
+            : <SunIcon title="Change To Light Mode" className='clickable-icon' onClick={changeMode} />
     }
 
     function changeMode() { 
@@ -38,20 +61,20 @@ function SideBar({mainSection, setMainSection, chatInfo, setChatInfo}:
             
             <ArrowSmallLeftIcon
             title='Return'
-            onClick={() => setChatInfo('')}
+            onClick={() => handleBtnClick('')}
             className={`
             clickable-icon
-            ${mainSection == 'Chat' && chatInfo ? "inline" : "hidden"}
+            ${mainPage.title == 'Chat' && chatInfo ? "inline" : "hidden"}
             lg:hidden
             `}/>
 
             <GiHamburgerMenu
             title='Options'
-            onClick={() => setMainSection('Options')}
+            onClick={() => handleBtnClick('Options')}
             className={`
             clickable-icon
-            ${mainSection === "Options" && 'icon-bg-hover'}
-            ${mainSection == 'Chat' && chatInfo ? "hidden" : "inline"}
+            ${mainPage.title === "Options" && 'icon-bg-hover'}
+            ${mainPage.title == 'Chat' && chatInfo ? "hidden" : "inline"}
             lg:inline
             `}/>
             
@@ -67,20 +90,20 @@ function SideBar({mainSection, setMainSection, chatInfo, setChatInfo}:
             '>
                 <BsFillBoxFill
                 title='Virtual Rooms'
-                onClick={() => setMainSection('Virtual Rooms')}
-                className={`clickable-icon ${mainSection === "Virtual Rooms" && 'icon-bg-hover'}`}
+                onClick={() => handleBtnClick('Virtual Rooms')}
+                className={`clickable-icon ${mainPage.title.includes("Virtual Rooms") && 'icon-bg-hover'}`}
                 />
                 
                 <IoMdContacts
                 title='Contacts'
-                onClick={() => setMainSection('Contacts')}
-                className={`clickable-icon ${mainSection == "Contacts" && 'icon-bg-hover'}`}
+                onClick={() => handleBtnClick('Contacts')}
+                className={`clickable-icon ${mainPage.title == "Contacts" && 'icon-bg-hover'}`}
                 />
 
                 <ChatBubbleOvalLeftEllipsisIcon
                 title='Chat'
-                onClick={() => setMainSection('Chat')}
-                className={`clickable-icon ${mainSection == "Chat" && 'icon-bg-hover'}`}
+                onClick={() => handleBtnClick('Chat')}
+                className={`clickable-icon ${mainPage.title == "Chat" && 'icon-bg-hover'}`}
                 />
             </div>
 
