@@ -4,13 +4,14 @@ import { doc, getDoc, onSnapshot} from 'firebase/firestore';
 import { db } from '@/firebase';
 import useAuth from '@/hooks/useAuth';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
+import { useDispatch } from 'react-redux';
+import { setUser } from '@/store/slices/chatInfoSlice';
 
-function ChatsList({ userChats, setChatInfo }: {
-    userChats: any,
-    setChatInfo:Dispatch<SetStateAction<any>>}) {
+function ChatsList({ userChats}: { userChats: any}) {
 
     const [searchInput, setSearchInput] = useState('')
     const { user } = useAuth()
+    const dispatch = useDispatch()
 
     async function getUserById(id: string) {
         const userDoc = await getDoc(doc(db, "users", id))
@@ -18,7 +19,8 @@ function ChatsList({ userChats, setChatInfo }: {
     }
 
     async function handleSelect(selectedUserId: any) {
-        setChatInfo(await getUserById(selectedUserId))
+        const selectedUser = await getUserById(selectedUserId)
+        selectedUser && dispatch(setUser(selectedUser))
     }
 
     function handleSearchChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -74,15 +76,22 @@ function ChatsList({ userChats, setChatInfo }: {
                 { userChats &&
                     Object.entries(userChats).map((chat: any) =>
                     String(chat[1].userInfo?.displayName).toLowerCase().includes(String(searchInput).toLowerCase()) &&
-                    <div onClick={() => handleSelect(chat[0])}>
+
+                    <div key={chat[1].userInfo?.displayName} onClick={() => handleSelect(chat[0])}>
                         <ChatSnippet username={chat[1].userInfo?.displayName}
                                     profilePic={chat[1].userInfo?.photoURL}
                                     lastMessage={chat[1]?.lastMessage}
-                                    lastSeen={chat[1].userInfo?.lastSeen}
+                                    // isUnread={chat[1]?.lastMessage?.time > chat[1]?.lastRead}
                                     isUnread={false}
                         />
                     </div>
                     )
+                    // .sort((a:any, b:any) => {
+                    //     if (a.props.lastMessage?.time && b.props.lastMessage?.time) {
+                    //         return a.props.lastMessage?.time - b.props.lastMessage?.time
+                    //     }
+                    //     return 0
+                    // })
                 }
             </div>
         </div>

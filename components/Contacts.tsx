@@ -8,9 +8,9 @@ import { RootState } from '@/store/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { setMainPageComponent, setMainPageTitle } from '@/store/slices/mainPageSlice';
 import Chat from './Chat';
+import { setUser } from '@/store/slices/chatInfoSlice';
 
-function Contacts({chatInfo, setChatInfo}:
-    {chatInfo:DocumentData, setChatInfo:Dispatch<SetStateAction<DocumentData>>}) {
+function Contacts() {
 
     const mainPage = useSelector((state: RootState) => state.mainPage)
     const dispatch = useDispatch()
@@ -43,8 +43,9 @@ function Contacts({chatInfo, setChatInfo}:
     }
 
     function handleUserSelect(userSelected: any) {
-        setChatInfo(userSelected)
-        dispatch(setMainPageComponent(<Chat chatInfo={chatInfo} setChatInfo={setChatInfo} />))
+        dispatch(setUser(userSelected))
+        dispatch(setMainPageTitle("Chat"))
+        dispatch(setMainPageComponent(<Chat />))
     }
 
     function handleSearchChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -89,9 +90,10 @@ function Contacts({chatInfo, setChatInfo}:
 
                     {
                         usersList &&
-                        usersList.map((u) => 
-                            String(u.displayName).toLowerCase().includes(String(searchInput).toLowerCase()) &&
-                            <div onClick={() => handleUserSelect(u)} className='
+                        usersList.map((u) => String(u.displayName).toLowerCase().includes(String(searchInput).toLowerCase()) &&
+                            <div key={u.displayName}
+                            onClick={() => handleUserSelect(u)}
+                            className='
                             h-max 
                             flex flex-row
                             p-3 pr-4 m-1
@@ -113,6 +115,13 @@ function Contacts({chatInfo, setChatInfo}:
                                 </p>
                             </div>
                         )
+                        .sort((a:any, b:any) => {
+                            if (a.lastSeen && b.lastSeen) {
+                                return a.lastSeen.toDate() - b.lastSeen.toDate()
+                            }
+                            return 0
+                        })
+                        
                     }
                     
                 </div>

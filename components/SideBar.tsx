@@ -12,23 +12,23 @@ import { selectMainPage, setMainPageComponent, setMainPageTitle } from '@/store/
 import Contacts from './Contacts'
 import VirtualRooms from './virtual-rooms/VirtualRooms'
 import { selectVirtualRoom } from '@/store/slices/virtualRoomSlice'
+import { selectChatInfo } from '@/store/slices/chatInfoSlice'
 
 let isDarkMode = true;
 
-function SideBar({ chatInfo, setChatInfo}:
-                {chatInfo: any,
-                setChatInfo: Dispatch<SetStateAction<any>>}) {
+function SideBar() {
 
     const [modeIcon, setModeIcon] = useState(getModeIcon);
     const mainPage = useSelector(selectMainPage)
     const virtualRoom = useSelector(selectVirtualRoom)
+    const chatInfo = useSelector(selectChatInfo)
     const dispatch = useDispatch()
 
     function handleBtnClick(page: string) {
         dispatch(setMainPageTitle(page))
 
-        if(page === 'Chat'){dispatch(setMainPageComponent(<Chat chatInfo={chatInfo!} setChatInfo={setChatInfo} />)) }
-        else if(page === 'Contacts') dispatch(setMainPageComponent(<Contacts chatInfo={chatInfo!} setChatInfo={setChatInfo} />))
+        if(page === 'Chat'){dispatch(setMainPageComponent(<Chat />)) }
+        else if(page === 'Contacts') dispatch(setMainPageComponent(<Contacts />))
         else if(page === 'Virtual Rooms') dispatch(setMainPageComponent(<VirtualRooms />))
         else if(page === 'Options') dispatch(setMainPageComponent(<></>))
     }
@@ -58,7 +58,7 @@ function SideBar({ chatInfo, setChatInfo}:
             onClick={() => handleBtnClick('')}
             className={`
             clickable-icon
-            ${mainPage.title == 'Chat' && chatInfo ? "inline" : "hidden"}
+            ${mainPage.title == 'Chat' && chatInfo.user ? "inline" : "hidden"}
             lg:hidden
             `}/>
 
@@ -68,7 +68,7 @@ function SideBar({ chatInfo, setChatInfo}:
             className={`
             clickable-icon
             ${mainPage.title === "Options" && 'icon-bg-hover'}
-            ${mainPage.title == 'Chat' && chatInfo ? "hidden" : "inline"}
+            ${mainPage.title == 'Chat' && chatInfo.user ? "hidden" : "inline"}
             lg:inline
             `}/>
             

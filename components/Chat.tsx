@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, use, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {LinkIcon, PaperAirplaneIcon} from '@heroicons/react/24/solid'
 import Message from './Message'
 import useAuth from '@/hooks/useAuth'
@@ -7,21 +7,19 @@ import { DocumentData, Timestamp, collection, doc, getDoc, getDocs, onSnapshot, 
 import { db } from '@/firebase'
 import TimeAgo from 'timeago-react'
 import { useDispatch, useSelector } from 'react-redux'
-import { RootState } from '@/store/store'
 import { selectMainPage, setMainPageTitle } from '@/store/slices/mainPageSlice'
+import { selectChatInfo, setMessages } from '@/store/slices/chatInfoSlice'
 
-// let initialMessagesInfo = [{"username":"Tomer Haik", "message":"Are you ready for the next lesson?"}]
-
-function Chat({chatInfo, setChatInfo}:
-    {chatInfo:any | null, setChatInfo:Dispatch<SetStateAction<any>>}) {
+function Chat() {
 
     const { user } = useAuth()
 
     const mainPage = useSelector(selectMainPage)
+    const chatInfo = useSelector(selectChatInfo)
     const dispatch = useDispatch()
 
-    const [messagesInfo, setMessagesInfo] = useState<any[]>([]);
-    const [userChats, setUserChats] = useState<any[]>();
+    // const [messagesInfo, setMessagesInfo] = useState<any[]>([]);
+    const [userChats, setUserChats] = useState<unknown[]>();
 
     const [input, setInput] = useState('');
     const messagesEndRef = useRef<null | HTMLDivElement>(null)
@@ -29,20 +27,26 @@ function Chat({chatInfo, setChatInfo}:
     useEffect(() => {
         user?.uid && onSnapshot(doc(db, 'userChats', user?.uid!), (userChatsDoc: any) => {
             setUserChats(userChatsDoc.data())
-            // console.log(userChatsDoc.data())
+
+            // // Add lastRead time to doc(db, "userChats", user?.uid!) using serverTimestamp() without deleting the other data!!
+            // setDoc(doc(db, "userChats", user?.uid!), {
+            //     [chatInfo.user?.uid]: {
+            //         lastRead: serverTimestamp(),
+            //     }
+            // }, {merge: true})
         })
         
     }, [db])
     
     useEffect(() => {
-        chatInfo && onSnapshot(doc(db, 'chats', getUsersCombinedId(chatInfo)!), (userChatsDoc: any) => {
-            setMessagesInfo(userChatsDoc.data()?.messages)
+        getUsersCombinedId() && onSnapshot(doc(db, 'chats', getUsersCombinedId()!), (usersChatsDoc: DocumentData) => {
+            dispatch(setMessages(usersChatsDoc.data()?.messages))
         })
-    }, [db, chatInfo])
+    }, [db, chatInfo.user])
 
     useEffect(() => {
         scrollToBottom()
-    }, [messagesInfo]);
+    }, [chatInfo.messages]);
 
     const scrollToBottom = () => {
         if (messagesEndRef.current) {
@@ -50,20 +54,20 @@ function Chat({chatInfo, setChatInfo}:
         }
     }
 
-    function getUsersCombinedId(otherUser: any) {
-        if(!user?.uid || !otherUser?.uid) return null
+    function getUsersCombinedId() {
+        if(!user?.uid || !chatInfo.user?.uid) return null
 
         const combinedId =
-                    user?.uid! > otherUser.uid
-                    ? user.uid + otherUser.uid
-                    : otherUser.uid + user.uid
+                    user?.uid! > chatInfo.user.uid
+                    ? user.uid + chatInfo.user.uid
+                    : chatInfo.user.uid + user.uid
 
         return combinedId
     }
 
-    async function createChat(otherUser:DocumentData, msg:string) {
+    async function createChat(msg:string) {
         
-        const combinedId = getUsersCombinedId(otherUser)
+        const combinedId = getUsersCombinedId()
 
         if(!combinedId) return
 
@@ -76,27 +80,29 @@ function Chat({chatInfo, setChatInfo}:
             await setDoc(doc(db, "userChats", user?.uid!), {
             }, {merge: true})
             
-            await setDoc(doc(db, "userChats", otherUser?.uid!), {
+            await setDoc(doc(db, "userChats", chatInfo.user?.uid!), {
             }, {merge: true})
 
             await updateDoc(doc(db, "userChats", user?.uid!), {
-                [otherUser?.uid]: {
+                [chatInfo.user?.uid]: {
                     userInfo: {
-                    uid: otherUser?.uid,
-                    displayName: otherUser?.displayName,
-                    photoURL: otherUser?.photoURL,
-                    email: otherUser?.email,
+                    uid: chatInfo.user?.uid,
+                    displayName: chatInfo.user?.displayName,
+                    photoURL: chatInfo.user?.photoURL,
+                    email: chatInfo.user?.email,
                     },
                     
                     lastMessage: {
                         username: user?.displayName,
-                        content: msg
+                        content: msg,
+                        time: serverTimestamp(),
                     },
+                    lastRead: serverTimestamp(),
                 }
             })
 
 
-            await updateDoc(doc(db, "userChats", otherUser?.uid), {
+            await updateDoc(doc(db, "userChats", chatInfo.user?.uid), {
                 [user?.uid!]: {
                     userInfo: {
                     uid: user?.uid,
@@ -107,25 +113,27 @@ function Chat({chatInfo, setChatInfo}:
                     
                     lastMessage: {
                         username: user?.displayName,
-                        content: msg
+                        content: msg,
+                        time: serverTimestamp(),
                     },
+                    lastRead: serverTimestamp(),
                 }
             })
         }
     }
 
-    async function getChatMessages(otherUser: any) {
-        const usersChatMessagesSnap = await getDoc(doc(db, "chats", getUsersCombinedId(otherUser)!))
+    async function getChatMessages() {
+        const usersChatMessagesSnap = await getDoc(doc(db, "chats", getUsersCombinedId()!))
 
         // if(!usersChatMessagesSnap.exists()) return null
 
         return usersChatMessagesSnap.data()
     }
 
-    async function sendMessage(otherUser: any, message: string) {
-        createChat(otherUser, message)
+    async function sendMessage(message: string) {
+        await createChat(message)
 
-        let chatMessages = await getChatMessages(otherUser) ?? { messages:[] }
+        let chatMessages = await getChatMessages() ?? { messages:[] }
 
         chatMessages.messages.push({
             username: user?.displayName,
@@ -133,7 +141,7 @@ function Chat({chatInfo, setChatInfo}:
             timestamp: Timestamp.now(),
         })
 
-        await updateDoc(doc(db, "userChats", otherUser?.uid), {
+        await updateDoc(doc(db, "userChats", chatInfo.user?.uid), {
             [user?.uid!]: {
                 userInfo: {
                 uid: user?.uid,
@@ -144,28 +152,33 @@ function Chat({chatInfo, setChatInfo}:
                 
                 lastMessage: {
                     username: user?.displayName,
-                    content: message
+                    content: message,
+                    time: serverTimestamp(),
                 },
+                lastRead: serverTimestamp(),
             }
         })
 
         await updateDoc(doc(db, "userChats", user?.uid!), {
-            [otherUser?.uid!]:{
+            [chatInfo.user?.uid!]:{
                 userInfo: {
-                uid: otherUser?.uid,
-                displayName: otherUser?.displayName,
-                photoURL: otherUser?.photoURL,
-                email: otherUser?.email,
+                uid: chatInfo.user?.uid,
+                displayName: chatInfo.user?.displayName,
+                photoURL: chatInfo.user?.photoURL,
+                email: chatInfo.user?.email,
                 },  
                 
                 lastMessage: {
                     username: user?.displayName,
-                    content: message
+                    content: message,
+                    time: serverTimestamp(),
                 },
+
+                lastRead: serverTimestamp(),
             }
         })
 
-        await setDoc(doc(db, "chats", getUsersCombinedId(otherUser)!), chatMessages)
+        await setDoc(doc(db, "chats", getUsersCombinedId()!), chatMessages)
     }
 
     function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -176,7 +189,7 @@ function Chat({chatInfo, setChatInfo}:
     function handleAdd() {
         // add message
         if(input != '' && input != null) {
-            sendMessage(chatInfo, input)
+            sendMessage(input)
             
             setInput('')
         }
@@ -189,35 +202,32 @@ function Chat({chatInfo, setChatInfo}:
             <div className={`
             flex flex-row
             lg:min-w-[20rem] lg:w-[25rem]
-            ${chatInfo ?
-                "hidden"
-                :
-                "w-[35rem] max-w-[30rem] lg:w-[35rem] lg:max-w-[30rem]"}
+            ${chatInfo.user ? "hidden" : "w-[35rem] max-w-[30rem] lg:w-[35rem] lg:max-w-[30rem]"}
             lg:inline
             `}>
-                <ChatsList userChats={userChats} setChatInfo={setChatInfo} />
+                <ChatsList userChats={userChats} />
             </div>
             }
             
-            { chatInfo &&
+            { chatInfo.user &&
             <div className='flex flex-row w-full'>
                 <div className='line'/>
-                <div className='flex flex-col w-full sm:w-[calc(100vw-90px)] lg:w-[calc(100vw-410px)]'>
+                <div className={`flex flex-col w-full  ${ !userChats && 'sm:w-[calc(100vw-90px)] lg:w-[calc(100vw-410px)]'}`}>
                     <div className='flex flex-row justify-between content-cente p-5'>
                         <div className='flex flex-col self-center'>
-                            <h1 className={`text-xl font-bold ${chatInfo?.isGroup && 'text-3xl font-bold'}`}>
-                                { chatInfo?.displayName}
+                            <h1 className={`text-xl font-bold ${chatInfo.user?.isGroup && 'text-3xl font-bold'}`}>
+                                { chatInfo.user?.displayName}
                             </h1>
                             <div className='text-sm my-1 space-x-1 flex flex-row'>
                                 <p> Last seen </p>
                                 <p>
-                                    <TimeAgo datetime={chatInfo.lastSeen?.toDate()}/>
+                                    <TimeAgo datetime={chatInfo.user.lastSeen?.toDate()}/>
                                     ...
                                 </p>
                             </div>
                         </div>
                         
-                        <img src={chatInfo.photoURL} width="600" height="600" title={chatInfo?.displayName ?? ''}
+                        <img src={chatInfo.user.photoURL} width="600" height="600" title={chatInfo.user?.displayName ?? ''}
                         className='
                         h-12 w-12 mx-1 rounded-full
                         outline-none
@@ -237,7 +247,7 @@ function Chat({chatInfo, setChatInfo}:
                         overflow-y-scroll h-[calc(100vh-295px)] sm:h-[calc(100vh-15.3rem)] scrollbar-hide
                         px-5 py-2
                         '>
-                            {messagesInfo && messagesInfo.map((m) => <Message username={m.username} message={m.message} />)}
+                            {chatInfo.messages && chatInfo.messages.map((m) => <Message username={m.username} message={m.message} />)}
                         </div>
 
                         <div className='
