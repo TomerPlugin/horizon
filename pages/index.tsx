@@ -4,13 +4,14 @@ import Chat from '@/components/Chat'
 import TopBar from '@/components/TopBar'
 import SideBar from '@/components/SideBar'
 import { useState } from 'react'
-import { DocumentData } from 'firebase/firestore'
+import { DocumentData, doc } from 'firebase/firestore'
 import Login from '@/components/Login'
 import Contacts from '@/components/Contacts'
 import VirtualRooms from '@/components/virtual-rooms/VirtualRooms'
 import { useSelector } from 'react-redux'
 import { selectMainPage } from '@/store/slices/mainPageSlice'
 import Loading from '@/components/Loading'
+import { selectVirtualRoom } from '@/store/slices/virtualRoomSlice'
 
 // const inter = Inter({ subsets: ['latin'] })
 
@@ -18,6 +19,12 @@ export default function Home() {
   const { loading, user } = useAuth()
   const [chatInfo, setChatInfo] = useState<DocumentData>()
   const mainPage = useSelector(selectMainPage)
+  const virtualRoom = useSelector(selectVirtualRoom)
+
+  // if(virtualRoom?.isActive) {
+  //   const virtualRoomDocRef = doc(db, "rooms", virtualRoom.id)
+  //   getDoc()
+  // }
 
   if(loading) return <Loading />
   else if(!user) return <Login />

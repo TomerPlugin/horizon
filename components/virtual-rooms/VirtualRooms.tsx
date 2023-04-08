@@ -14,7 +14,7 @@ function VirtualRooms() {
     const virtualRoom = useSelector(selectVirtualRoom)
     
     function getVirtualRoomSection() {
-        if (virtualRoom.isActive) return <VirtualRoom mode=""/>
+        if (virtualRoom.isActive) return <VirtualRoom />
         else if(mainPage.title.includes("Virtual Rooms")) return <InitialVirtualRoomsOptions />
     }
     

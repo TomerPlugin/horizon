@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useId, useRef, useState } from 'react'
 import { ClipboardIcon, Squares2X2Icon, VideoCameraIcon, VideoCameraSlashIcon } from '@heroicons/react/24/outline'
 import { BsMic, BsMicMute } from 'react-icons/bs'
 import { FiCopy } from 'react-icons/fi'
@@ -8,10 +8,19 @@ import { db } from '@/firebase'
 import { off } from 'process'
 import { setMainPageTitle } from '@/store/slices/mainPageSlice'
 import { useDispatch, useSelector } from 'react-redux'
-import { clearVirtualRoom, selectVirtualRoom, setId, setIsActive, setIsMicActive, setIsWebcamActive, setPeerConnection } from '@/store/slices/virtualRoomSlice'
+import { addMember, clearVirtualRoom, removeMember, replaceMember, selectVirtualRoom, setId, setIsActive, setIsAddedExistingMembers, setIsMicActive, setIsWebcamActive, setLocalInfo, setMembers, setTitle } from '@/store/slices/virtualRoomSlice'
+import { v4 as uuid } from 'uuid';
+import useAuth from '@/hooks/useAuth'
+import Video from './Video'
+import VirtualRoomChat from './VirtualRoomChat'
 
-// let localStream;
-// let remoteStream;
+interface Member {
+    id: string,
+    username: string,
+    info: DocumentData,
+    peer: RTCPeerConnection | null,
+    videoStream: MediaStream | null,
+}   
 
 const servers = {
     iceServers: [
@@ -24,193 +33,302 @@ const servers = {
     ],
 }
 
-function VirtualRoom({mode}:{ mode:string }) {
+function VirtualRoom() {
     const [userCount, setUserCount] = useState(2)
-    const [localStream, setLocalStream] = useState<any>()
+    const [isLocalMemberHasInfo, setIsLocalMemberHasInfo] = useState(false)
+    const isAddedExistingMembers = useRef(false);
+    const { user } = useAuth()
+
     const virtualRoom = useSelector(selectVirtualRoom)
     const dispatch = useDispatch()
-
-    !virtualRoom.peerConnection && dispatch(setPeerConnection(new RTCPeerConnection(servers)))
+    !virtualRoom.id && dispatch(setId(String(uuid().toUpperCase())))
     
-    const localVideoRef = useRef<any>()
-    const remoteVideoRef = useRef<any>()
+    let localStream = new MediaStream
+    // const localVideoRef = useRef<any>()
+    // const remoteVideoRef = useRef<any>()
 
-    // useEffect(() => {
-    //     resetLocalStream()
-    // }, [localStream, isWebcamActive, isMicActive])
+    useEffect(() => {
+        resetLocalStream()
+    }, [virtualRoom.isWebcamActive, virtualRoom.isMicActive])
 
     useEffect(() => {
         function setup() {
-            dispatch(setMainPageTitle(`Virtual Room: ${virtualRoom.title}`))
             dispatch(setIsActive(true))
-            setupSources()
+            setupLocalSources()
         }
-        return () => setup()
+        return () => {!virtualRoom.isActive && setup()}
     }, [])
 
-    // function resetLocalStream() {
-    //     if(localStream) {
-    //         localStream.getTracks().forEach((track: MediaStreamTrack) => {
-    //             track.stop()
-    //         })
-    //     }
-    //     navigator.mediaDevices.getUserMedia({
-    //         video: virtualRoom.isWebcamActive,
-    //         audio: virtualRoom.isMicActive
-    //     }).then((stream) => {
-    //         setLocalStream(stream)
-    //     })
-    // }
+    useEffect(() => {
+        virtualRoom.id && onSnapshot(collection(db, "rooms", virtualRoom.id, "members"), (membersSnapshot) => {
+            membersSnapshot.docChanges().forEach((change) => {
+                // If member already in members list, skip him
+                const member = virtualRoom.members.find((m) => m.id == change.doc.id)
+                if(member || !isAddedExistingMembers.current) return
 
-    const getTimeEpoch = () => {
-        return new Date().getTime().toString();                             
+                console.log("Room update: ", change.type)
+
+                if(change.type === "added") {
+
+                    console.log("Adding new member:", change.doc.id)
+
+                    const member: Member = {
+                        id: change.doc.id,
+                        username: change.doc.data().username,
+                        info: change.doc.data(),
+                        peer: new RTCPeerConnection(servers),
+                        videoStream: new MediaStream()
+                    }
+
+                    member.id != user?.uid && setupMember(member)
+
+                    dispatch(addMember(member))
+                }
+
+                else if(change.type === "removed") {
+                    console.log("Removing existing member:", change.doc.data())
+                    dispatch(removeMember(change.doc.id))
+                }
+                // else if(change.type === "modified") {
+                //     console.log("Modifying existing member")
+                //     const member: Member = {
+                //         id: change.doc.id,
+                //         username: change.doc.data().username,
+                //         info: change.doc.data(),
+                //         peer: new RTCPeerConnection(servers),
+                //         videoStream: new MediaStream()
+                //     }
+                    
+                //     dispatch(replaceMember(member))
+                // }
+            })
+        })
+    }, [db])
+
+    const setupMember = async (member: Member) => {
+        member.peer!.ontrack = (event: any) => {
+            event.streams[0].getTracks().forEach((track: MediaStreamTrack) => {
+                member.videoStream!.addTrack(track)
+            })
+        }
+
+        localStream.getTracks().forEach((track: MediaStreamTrack) => {
+            member.peer?.addTrack(track, localStream)
+        })
+
+        const offerCandidates = collection(db, "rooms", virtualRoom.id, "members", user?.uid!, "offerCandidates")
+        const offerCandidatesSnap = await getDocs(offerCandidates)
+
+        if(offerCandidatesSnap.empty) {
+            member.peer!.onicecandidate = (event) => {
+                event.candidate && addDoc(offerCandidates, event.candidate.toJSON())
+            } 
+        }   
+
+        await createPeerOffer(member)
+        await getPeerAnswer(member)
+
+        getIceCandidates(member)
     }
 
-    async function collectIceCandidates(
-                        roomRef:DocumentReference<DocumentData>,
-                        remoteCandidatesCollection:CollectionReference<DocumentData>) {
-                            
-        const candidatesCollection = collection(roomRef, "offerCandidates");
+    async function getIceCandidates(member: Member) {
+        const memberCandidatesCollection = collection(db, "rooms", virtualRoom.id, "members", member.id, "offerCandidates");
 
-        virtualRoom.peerConnection!.addEventListener('icecandidate', event => {
-            if (event.candidate) {
-                const json = event.candidate.toJSON();
-                addDoc(candidatesCollection, json)
-            }
-        });
+        console.log("Getting ice cands...")
 
-        onSnapshot(remoteCandidatesCollection, snapshot => {
+        onSnapshot(memberCandidatesCollection, snapshot => {
             snapshot.docChanges().forEach(change => {
-                if (change.type === "added") {
+                if (change.type === "added" && member.peer?.remoteDescription) {
                     const candidate = new RTCIceCandidate(change.doc.data());
-                    virtualRoom.peerConnection!.addIceCandidate(candidate);
+                    member.peer!.addIceCandidate(candidate);
+                    console.log("Icecand added!")
                 }
             });
         })
     }
 
-    const setupSources = async () => {
-        const localStream = await navigator.mediaDevices.getUserMedia({
+    const setupLocalSources = async () => {
+        const roomDocRef = doc(db, "rooms", String(virtualRoom.id.toUpperCase()))
+        const roomMembersCollection = collection(roomDocRef, "members")
+        const localMemberDocRef = doc(roomMembersCollection, user?.uid)
+        const offerCandidates = collection(localMemberDocRef, "offerCandidates")
+
+
+        getDoc(roomDocRef).then(async roomSnap => {
+            const roomTitle = roomSnap.data()?.title
+
+            if(roomTitle) dispatch(setTitle(roomTitle))
+            else await setDoc(roomDocRef, { title: virtualRoom.title })
+            
+            dispatch(setMainPageTitle(`Virtual Room: ${ roomTitle ? roomTitle : virtualRoom.title }`))
+        })
+
+        localStream = await navigator.mediaDevices.getUserMedia({
             video: true,
             audio: false
         })
-        
-        const remoteStream = new MediaStream()
 
-        localStream.getTracks().forEach((track) => {
-            virtualRoom.peerConnection!.addTrack(track, localStream)
-        })
+        await setDoc(localMemberDocRef, {})
 
-        virtualRoom.peerConnection!.ontrack = (event) => {
-            event.streams[0].getTracks().forEach((track) => {
-                remoteStream.addTrack(track)
+        const membersSnapshot = await getDocs(roomMembersCollection)
+        membersSnapshot.docs.forEach(async (memberDoc) => {
+            const member: Member = {
+                id: memberDoc.id,
+                username: memberDoc.data().username,
+                info: memberDoc.data(),
+                peer: new RTCPeerConnection(servers),
+                videoStream: new MediaStream()
+            }
+
+            if(virtualRoom.members.find((m) => m.id == member.id)) return
+
+            if(memberDoc.id == user?.uid) {
+                member.videoStream = localStream
+                
+                dispatch(addMember(member))
+                return
+            }
+
+
+            console.log("Initializing existing member:", member)
+            dispatch(addMember(member))
+
+            member.peer!.ontrack = (event: any) => {
+                event.streams[0].getTracks().forEach((track: MediaStreamTrack) => {
+                    member.videoStream!.addTrack(track)
+                })
+            }
+    
+            localStream?.getTracks().forEach((track: MediaStreamTrack) => {
+                member.peer?.addTrack(track, localStream)
             })
-        }
 
-        let localVideo = localVideoRef?.current
-        if (localVideo) localVideo.srcObject = localStream
-        
-        let remoteVideo = remoteVideoRef.current
-        if (remoteVideo) remoteVideo.srcObject = remoteStream
+            const offerCandidatesSnap = await getDocs(offerCandidates)
 
-        localVideo?.play()
-        remoteVideo?.play()
+            if(offerCandidatesSnap.empty) {
+                member.peer!.onicecandidate = (event) => {
+                    event.candidate && addDoc(offerCandidates, event.candidate.toJSON())
+                } 
+            }   
 
-        if(mode == "create") createOffer()
-        else if (mode == "join") answerOffer()
-    }
+            await getPeerOffer(member)
+            await createPeerAnswer(member)
 
-    const createOffer = async () =>  {
-        const roomDocRef = doc(db, "rooms", getTimeEpoch())
-        const offerCandidates = collection(roomDocRef, "offerCandidates")
-        const answerCandidates = collection(roomDocRef, "answerCandidates")
-
-        dispatch(setId(roomDocRef.id))
-
-        const offerDescription = await virtualRoom.peerConnection!.createOffer()
-        await virtualRoom.peerConnection!.setLocalDescription(offerDescription)
-
-        virtualRoom.peerConnection!.onicecandidate = (event) => {
-            event.candidate && addDoc(offerCandidates, event.candidate.toJSON())
-        }
-
-        const roomWithOffer = {
-            offer: {
-                sdp: offerDescription.sdp,
-                type: offerDescription.type,
-            }
-        }
-
-        await setDoc(roomDocRef, roomWithOffer)
-
-        collectIceCandidates(roomDocRef, answerCandidates)
-
-        onSnapshot(roomDocRef, async snapshot => {
-            const data = snapshot.data()
-            console.log('Got updated room:', snapshot.data())
-            if(!virtualRoom.peerConnection!.remoteDescription && data?.answer) {
-                console.log('Set remote description: ', data.answer)
-                const answerDecription = new RTCSessionDescription(data.answer)
-                virtualRoom.peerConnection!.setRemoteDescription(answerDecription)
-            }
+            getIceCandidates(member)
         })
 
-        virtualRoom.peerConnection!.onconnectionstatechange = (event) => {
-            if(virtualRoom.peerConnection!.connectionState === "disconnected") hangUp
+        isAddedExistingMembers.current = true
+    }
+
+    const getPeerOffer = async (member: Member) => {
+        const remoteMemberDocRef = doc(db, "rooms", virtualRoom.id, "members", member.id)
+        const memberDocSnap = null
+
+        let offerDescription = null
+        while (!offerDescription) {
+            const memberDocSnap = await getDoc(remoteMemberDocRef)
+            offerDescription = memberDocSnap.data()?.offer
+        }
+
+        member.peer?.setRemoteDescription(offerDescription)
+        console.log("Got an offer!")
+    }
+
+    const createPeerAnswer = async (member: Member) => {
+        const localMemberDocRef = doc(db, "rooms", virtualRoom.id, "members", user?.uid!)
+        const localMemberAnswersCollectionRef = collection(localMemberDocRef, "answers")
+        const remoteMemberAnswerDocRef = doc(localMemberAnswersCollectionRef, member.id)
+
+        const answerDescription = await member.peer?.createAnswer()
+        member.peer?.setLocalDescription(answerDescription)
+        console.log("Generated answer")
+
+        await setDoc(remoteMemberAnswerDocRef, {
+            answer: {
+                sdp: answerDescription?.sdp,
+                type: answerDescription?.type,
+            }
+        })
+    }
+
+    const createPeerOffer = async (member: Member) => {
+        const remoteMemberDocRef = doc(db, "rooms", virtualRoom.id, "members", member.id)
+        const localMemberDocRef = doc(db, "rooms", virtualRoom.id, "members", user?.uid!)
+        const candidatesCollection = collection(localMemberDocRef, "offerCandidates") 
+
+        member.peer!.onicecandidate = (event) => {
+            event.candidate && addDoc(candidatesCollection, event.candidate.toJSON())
+        }
+
+        const offerDescription = await member.peer?.createOffer()
+        await member.peer!.setLocalDescription(offerDescription)
+        console.log("Generated offer")
+
+        const localOffer = (await getDoc(localMemberDocRef)).data()?.offer
+        if(!localOffer) {
+            const localPeerInfo = {
+                username: user?.displayName,
+                offer: {
+                    sdp: offerDescription!.sdp,
+                    type: offerDescription!.type,
+                }
+            }
+            
+            setDoc(localMemberDocRef, localPeerInfo)
+            dispatch(setLocalInfo(localPeerInfo))   
         }
     }
 
-    const answerOffer = async () => {
-        console.log("Answering room")
-        const roomDocRef = doc(db, "rooms", virtualRoom.id!)
-        const offerCandidates = collection(roomDocRef, "offerCandidates")
-        const answerCandidates = collection(roomDocRef, "answerCandidates")
+    const getPeerAnswer = async (member: Member) => {
+        const memberDocRef = doc(db, "rooms", virtualRoom.id, "members", member.id)
+        const memberAnswersCollectionRef = collection(memberDocRef, "answers")
 
-        const offerDescription = (await getDoc(roomDocRef)).data()?.offer
+        onSnapshot(memberAnswersCollectionRef, answerSnapshot => {
+            answerSnapshot.docChanges().forEach((change) => {
+                if(change.type == "added" && change.doc.id == user?.uid && change.doc.data()?.answer) {
+                    member.peer!.setRemoteDescription(change.doc.data().answer)
+                }
+            })
+        })
+    
+        member.peer!.onconnectionstatechange = (event) => {
+            if(member.peer!.connectionState === "disconnected") hangUp
+        }           
+    }
 
-        await virtualRoom.peerConnection!.setRemoteDescription(offerDescription)
-        
-        virtualRoom.peerConnection!.onicecandidate = (event) => {
-            event.candidate && addDoc(answerCandidates, event.candidate.toJSON())
-        }
-
-        const answerDescription = await virtualRoom.peerConnection!.createAnswer()
-        await virtualRoom.peerConnection!.setLocalDescription(answerDescription)
-
-        const roomWithAnswer = {
-            answer: {
-                type: answerDescription.type,
-                sdp: answerDescription.sdp,
+    function resetLocalStream() {
+        localStream.getTracks().forEach((track: MediaStreamTrack) => {
+            // audio or video
+            if (track.kind === 'video') {
+              track.enabled = virtualRoom.isWebcamActive
             }
-        }
-
-        await updateDoc(roomDocRef, roomWithAnswer)
-
-        collectIceCandidates(roomDocRef, offerCandidates)
-
-        virtualRoom.peerConnection!.onconnectionstatechange = (event) => {
-            if(virtualRoom.peerConnection!.connectionState === "disconnected") hangUp
-        }
+            else if (track.kind === 'audio') {
+                track.enabled = virtualRoom.isMicActive
+            }
+          });
     }
 
     const hangUp = async () => {
-        virtualRoom.peerConnection!.close()
+        virtualRoom.members.forEach((m: Member) => {
+            m.peer!.close()
+        })
         
         if(virtualRoom.id) {
-            const roomDocRef = doc(db, "rooms", virtualRoom.id!)
-            const offerCandidates = collection(roomDocRef, "offerCandidates")
-            const answerCandidates = collection(roomDocRef, "answerCandidates")
+            const userDocRef = doc(db, "rooms", virtualRoom.id!, "members", user?.uid!)
+            const offerCandidates = collection(userDocRef, "offerCandidates")
+            const answersRef = collection(userDocRef, "answers")
             
             for (const candidate of (await getDocs(offerCandidates)).docs) {
                 deleteDoc(candidate.ref)
             }
-            for (const candidate of (await getDocs(answerCandidates)).docs) {
+
+            for (const candidate of (await getDocs(answersRef)).docs) {
                 deleteDoc(candidate.ref)
             }
         
-            deleteDoc(roomDocRef)
+            deleteDoc(userDocRef)
             
-            alert("Room Ended!")
+            alert("You left the room!")
             dispatch(clearVirtualRoom())
             window.location.reload()
         }
@@ -226,24 +344,32 @@ function VirtualRoom({mode}:{ mode:string }) {
 
   return (
     <div className='w-full h-full flex flex-row'>
-        <div className={`flex flex-col w-full m-5 `}>
+        <div className={`flex flex-col w-full m-5`}>
             <div className={`flex flex-col space-y-5 items-center ${userCount > 2 ? "" : "sm:flex-row sm:space-x-5 sm:space-y-0"} sm:w-full sm:h-full h-full w-full`}>
-                {
-                    userCount > 2 ?
+                {/* { userCount > 2 &&
+                <div>
                     <div className='w-full flex flex-row space-x-3 justify-center'>
                         <div className='participant w-full max-w-[10rem] h-[6rem] bg-color-2nd rounded-xl'></div>
                         <div className='participant w-full max-w-[10rem] h-[6rem] bg-color-2nd rounded-xl'></div>
                         <div className='participant w-full max-w-[10rem] h-[6rem] bg-color-2nd rounded-xl'></div>
                         <div className='participant w-full max-w-[10rem] h-[6rem] bg-color-2nd rounded-xl'></div>
                     </div>
-                    : userCount > 1 &&
                     <div className='w-full h-full sm:w-fit rounded-xl bg-color-2nd'>
                         <video ref={remoteVideoRef} className='video'></video>
                     </div>
-                }
-                <div className='main-participant w-full h-full sm:w-fit rounded-xl bg-color-2nd'>
-                    <video ref={localVideoRef} className='video'></video>
                 </div>
+                } */}
+
+                {
+                    virtualRoom.members.map((member: Member) => {
+                        return (
+                            <div className='w-full h-full sm:w-fit rounded-xl bg-color-2nd' key={member.id}>
+                                <Video srcObject={member.videoStream!} autoPlay={true} className='video' />
+                            </div>
+                        )
+                    })
+                }
+
             </div>
             <div className='flex mt-5 justify-between items-center'>
                 <div title='Copy Room Id' className='flex items-center
@@ -301,9 +427,7 @@ function VirtualRoom({mode}:{ mode:string }) {
                 </div>
             </div>
         </div>
-        <div className='virtualroom-chat hidden lg:inline m-5 ml-0 bg-color-2nd rounded-2xl w-5/12'>
-
-        </div>
+        <VirtualRoomChat />
     </div>
   )
 }

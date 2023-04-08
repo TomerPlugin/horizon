@@ -85,7 +85,7 @@ function SideBar() {
                 <BsFillBoxFill
                 title='Virtual Rooms'
                 onClick={() => handleBtnClick('Virtual Rooms')}
-                className={`clickable-icon ${mainPage.title.includes("Virtual Rooms") && 'icon-bg-hover'}`}
+                className={`clickable-icon ${mainPage.title.includes("Virtual Room") && 'icon-bg-hover'}`}
                 />
                 
                 <IoMdContacts

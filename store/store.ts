@@ -2,12 +2,16 @@ import { configureStore } from '@reduxjs/toolkit'
 import mainPageReducer from './slices/mainPageSlice'
 import virtualRoomReducer from './slices/virtualRoomSlice'
 import chatInfoReducer from './slices/chatInfoSlice'
+import userChatsReducer from './slices/userChatsSlice'
+import peerReducer from './slices/peerSlice'
 
 export const store = configureStore({
   reducer: {
     mainPage: mainPageReducer,
     virtualRoom: virtualRoomReducer,
     chatInfo: chatInfoReducer,
+    userChats: userChatsReducer,
+    peer: peerReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({serializableCheck: false}),
 })
