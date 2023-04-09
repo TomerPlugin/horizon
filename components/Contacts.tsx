@@ -115,13 +115,6 @@ function Contacts() {
                                 </p>
                             </div>
                         )
-                        .sort((a:any, b:any) => {
-                            if (a.lastSeen && b.lastSeen) {
-                                return a.lastSeen.toDate() - b.lastSeen.toDate()
-                            }
-                            return 0
-                        })
-                        
                     }
                     
                 </div>

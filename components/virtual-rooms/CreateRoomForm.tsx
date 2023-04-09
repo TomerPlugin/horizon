@@ -28,11 +28,12 @@ function CreateRoomForm() {
         <div className='flex flex-col justify-center'>
             <div className='flex flex-col w-[20rem] rounded-md outline-main-color space-y-6 border-2 p-8 border-none'>
                 <input value={input} onChange={handleInputChange}
-                onKeyDown={event => event.key == 'Enter' && createNewRoom}
+                onKeyDown={event => event.key == 'Enter' && createNewRoom()}
                 type="text" placeholder='Enter room title...'
                 className='bg-transparent p-3 focus:outline-main-color  rounded-md' />
 
                 <button className='p-3 bg-color-2nd clickable'
+                        // onKeyDown={event => event.key == 'Enter' && createNewRoom()}
                         onClick={createNewRoom}>
                     <p>Create Room</p>
                 </button>

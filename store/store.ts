@@ -2,12 +2,20 @@ import { configureStore } from '@reduxjs/toolkit'
 import mainPageReducer from './slices/mainPageSlice'
 import virtualRoomReducer from './slices/virtualRoomSlice'
 import chatInfoReducer from './slices/chatInfoSlice'
+<<<<<<< HEAD
+=======
+import userChatsReducer from './slices/userChatsSlice'
+>>>>>>> fe75cd997e348633fa40c113fda410f0b97f2b05
 
 export const store = configureStore({
   reducer: {
     mainPage: mainPageReducer,
     virtualRoom: virtualRoomReducer,
     chatInfo: chatInfoReducer,
+<<<<<<< HEAD
+=======
+    userChats: userChatsReducer,
+>>>>>>> fe75cd997e348633fa40c113fda410f0b97f2b05
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({serializableCheck: false}),
 })

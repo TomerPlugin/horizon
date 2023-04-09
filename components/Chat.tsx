@@ -10,32 +10,24 @@ import { useDispatch, useSelector } from 'react-redux'
 import { selectMainPage, setMainPageTitle } from '@/store/slices/mainPageSlice'
 import { selectChatInfo, setMessages } from '@/store/slices/chatInfoSlice'
 
-function Chat() {
+import { selectUserChats, setUserChats } from '@/store/slices/userChatsSlice'
 
+function Chat() {
     const { user } = useAuth()
 
     const mainPage = useSelector(selectMainPage)
     const chatInfo = useSelector(selectChatInfo)
-    const dispatch = useDispatch()
 
-    // const [messagesInfo, setMessagesInfo] = useState<any[]>([]);
-    const [userChats, setUserChats] = useState<unknown[]>();
+    const userChats = useSelector(selectUserChats)
+    const dispatch = useDispatch()
 
     const [input, setInput] = useState('');
     const messagesEndRef = useRef<null | HTMLDivElement>(null)
 
     useEffect(() => {
         user?.uid && onSnapshot(doc(db, 'userChats', user?.uid!), (userChatsDoc: any) => {
-            setUserChats(userChatsDoc.data())
-
-            // // Add lastRead time to doc(db, "userChats", user?.uid!) using serverTimestamp() without deleting the other data!!
-            // setDoc(doc(db, "userChats", user?.uid!), {
-            //     [chatInfo.user?.uid]: {
-            //         lastRead: serverTimestamp(),
-            //     }
-            // }, {merge: true})
+            dispatch(setUserChats(userChatsDoc.data()))
         })
-        
     }, [db])
     
     useEffect(() => {
@@ -95,7 +87,7 @@ function Chat() {
                     lastMessage: {
                         username: user?.displayName,
                         content: msg,
-                        time: serverTimestamp(),
+                        timestamp: serverTimestamp(),
                     },
                     lastRead: serverTimestamp(),
                 }
@@ -114,7 +106,7 @@ function Chat() {
                     lastMessage: {
                         username: user?.displayName,
                         content: msg,
-                        time: serverTimestamp(),
+                        timestamp: serverTimestamp(),
                     },
                     lastRead: serverTimestamp(),
                 }
@@ -153,9 +145,8 @@ function Chat() {
                 lastMessage: {
                     username: user?.displayName,
                     content: message,
-                    time: serverTimestamp(),
+                    timestamp: serverTimestamp(),
                 },
-                lastRead: serverTimestamp(),
             }
         })
 
@@ -171,7 +162,7 @@ function Chat() {
                 lastMessage: {
                     username: user?.displayName,
                     content: message,
-                    time: serverTimestamp(),
+                    timestamp: serverTimestamp(),
                 },
 
                 lastRead: serverTimestamp(),
@@ -205,7 +196,7 @@ function Chat() {
             ${chatInfo.user ? "hidden" : "w-[35rem] max-w-[30rem] lg:w-[35rem] lg:max-w-[30rem]"}
             lg:inline
             `}>
-                <ChatsList userChats={userChats} />
+                <ChatsList />
             </div>
             }
             
