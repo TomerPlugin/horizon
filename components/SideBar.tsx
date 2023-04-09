@@ -5,14 +5,14 @@ import { BsFillBoxFill } from 'react-icons/bs'
 import { IoMdContacts } from 'react-icons/io'
 import { ArrowSmallLeftIcon, ChatBubbleOvalLeftEllipsisIcon, MoonIcon, SunIcon } from '@heroicons/react/24/solid'
 import { useState } from 'react'
-import Chat from './Chat'
+import Chat from './chat/Chat'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@/store/store'
 import { selectMainPage, setMainPageComponent, setMainPageTitle } from '@/store/slices/mainPageSlice'
 import Contacts from './Contacts'
 import VirtualRooms from './virtual-rooms/VirtualRooms'
 import { selectVirtualRoom } from '@/store/slices/virtualRoomSlice'
-import { selectChatInfo } from '@/store/slices/chatInfoSlice'
+import { selectChatInfo, setUser } from '@/store/slices/chatInfoSlice'
 
 let isDarkMode = false;
 
@@ -55,7 +55,7 @@ function SideBar() {
             
             <ArrowSmallLeftIcon
             title='Return'
-            onClick={() => handleBtnClick('')}
+            onClick={() => dispatch(setUser(null))}
             className={`
             clickable-icon
             ${mainPage.title == 'Chat' && chatInfo.user ? "inline" : "hidden"}
@@ -102,6 +102,7 @@ function SideBar() {
             </div>
 
             { modeIcon }
+
         </div>
     )
 }

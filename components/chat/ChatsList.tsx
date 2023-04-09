@@ -31,26 +31,27 @@ function ChatsList() {
 
   return (
     <div className='text-sm w-full'>
-        <div className='m-8 space-y-6'>
+        <div className='m-8 space-y-5'>
             <div className='flex flex-row items-center justify-between'>
                 <h1 className='text-base w-32'>
                     My Chats
                 </h1>
             </div>
-            <div className='flex flex-row'>
+            {/* <div className='flex flex-row'>
                 <button className='btn'>
                     Read    
                 </button>
                 <button className='btn'>
                     Unread
                 </button>
-            </div>
+            </div> */}
+
             <div className='
                     flex flex-row
                     items-center
                     bg-color-2nd
                     rounded-lg
-                    w-full max-w-[15rem]
+                    w-full 
                     pl-4'>
                         
                 <input value={searchInput}

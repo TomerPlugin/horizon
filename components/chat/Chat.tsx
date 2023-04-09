@@ -86,6 +86,7 @@ function Chat() {
                     
                     lastMessage: {
                         username: user?.displayName,
+                        userId: user?.uid,
                         content: msg,
                         timestamp: serverTimestamp(),
                     },
@@ -105,6 +106,7 @@ function Chat() {
                     
                     lastMessage: {
                         username: user?.displayName,
+                        userId: user?.uid,
                         content: msg,
                         timestamp: serverTimestamp(),
                     },
@@ -117,8 +119,6 @@ function Chat() {
     async function getChatMessages() {
         const usersChatMessagesSnap = await getDoc(doc(db, "chats", getUsersCombinedId()!))
 
-        // if(!usersChatMessagesSnap.exists()) return null
-
         return usersChatMessagesSnap.data()
     }
 
@@ -129,6 +129,7 @@ function Chat() {
 
         chatMessages.messages.push({
             username: user?.displayName,
+            userId: user?.uid,
             message: message,
             timestamp: Timestamp.now(),
         })
@@ -144,6 +145,7 @@ function Chat() {
                 
                 lastMessage: {
                     username: user?.displayName,
+                    userId: user?.uid,
                     content: message,
                     timestamp: serverTimestamp(),
                 },
@@ -162,6 +164,7 @@ function Chat() {
                 lastMessage: {
                     username: user?.displayName,
                     content: message,
+                    userId: user?.uid,
                     timestamp: serverTimestamp(),
                 },
 
@@ -202,7 +205,7 @@ function Chat() {
             
             { chatInfo.user &&
             <div className='flex flex-row w-full'>
-                <div className='line'/>
+                <div className='line hidden sm:inline'/>
                 <div className={`flex flex-col w-full  ${ !userChats && 'sm:w-[calc(100vw-90px)] lg:w-[calc(100vw-410px)]'}`}>
                     <div className='flex flex-row justify-between content-cente p-5'>
                         <div className='flex flex-col self-center'>
@@ -238,7 +241,7 @@ function Chat() {
                         overflow-y-scroll h-[calc(100vh-295px)] sm:h-[calc(100vh-15.3rem)] scrollbar-hide
                         px-5 py-2
                         '>
-                            {chatInfo.messages && chatInfo.messages.map((m) => <Message username={m.username} message={m.message} />)}
+                            {chatInfo.messages && chatInfo.messages.map((m) => <Message username={m.username} userId={m.userId} message={m.message} />)}
                         </div>
 
                         <div className='

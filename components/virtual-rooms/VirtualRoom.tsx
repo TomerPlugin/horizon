@@ -34,8 +34,6 @@ function VirtualRoom({mode}:{ mode:string }) {
     const remoteVideoRef = useRef<any>()
 
     function initialSetup() {
-        console.log("setup")
-        
         peer = new RTCPeerConnection(servers)
         dispatch(setPeerConnection(peer))
 

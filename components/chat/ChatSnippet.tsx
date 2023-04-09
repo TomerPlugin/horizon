@@ -20,7 +20,7 @@ function ChatSnippet({username, profilePic, lastMessage, isUnread}:
                 <p className='text-base font-semibold'>{username}</p>
                 <div className='flex space-x-1'>
                   <p className='text-sm font-medium'>
-                    {`${lastMessage?.username.split(' ')[0] == user?.displayName?.split(' ')[0] ? "You" : lastMessage?.username.split(' ')[0]}: `}
+                    {`${lastMessage?.userId == user?.uid ? "You" : lastMessage?.username.split(' ')[0]}: `}
                   </p>
                   <p className='text-sm font-light text-ellipsis overflow-hidden'>{lastMessage?.content}</p>
                 </div>

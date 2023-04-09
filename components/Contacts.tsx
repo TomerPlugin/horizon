@@ -7,7 +7,7 @@ import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
 import { RootState } from '@/store/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { setMainPageComponent, setMainPageTitle } from '@/store/slices/mainPageSlice';
-import Chat from './Chat';
+import Chat from './chat/Chat';
 import { setUser } from '@/store/slices/chatInfoSlice';
 
 function Contacts() {

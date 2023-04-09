@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import useAuth from '../hooks/useAuth'
-import Chat from '@/components/Chat'
+import Chat from '@/components/chat/Chat'
 import TopBar from '@/components/TopBar'
 import SideBar from '@/components/SideBar'
 import { useState } from 'react'

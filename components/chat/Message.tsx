@@ -1,10 +1,10 @@
 import useAuth from '@/hooks/useAuth'
 import React from 'react'
 
-function Message({username, message}: {username:string, message:string}) {
+function Message({username, userId, message}: {username:string, userId:string, message:string}) {
   const { user } = useAuth()
 
-  if(username == user?.displayName)
+  if(userId == user?.uid)
   {
     return (
       <div className='w-full flex flex-row justify-end'>

@@ -17,7 +17,7 @@ export const chatInfoSlice = createSlice({
     name: "chatInfo",
     initialState,
     reducers: {
-        setUser: (state, action: PayloadAction<DocumentData>) => {
+        setUser: (state, action: PayloadAction<DocumentData | null>) => {
             state.user = action.payload
         },
         setMessages: (state, action: PayloadAction<DocumentData[]>) => {
