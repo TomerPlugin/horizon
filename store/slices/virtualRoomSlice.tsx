@@ -7,6 +7,8 @@ interface VirtualRoomState{
     isActive: boolean,
     id: string,
     peerConnection: RTCPeerConnection | null,
+    localStream: MediaStream | null,
+    remoteStream: MediaStream | null,
     isRemoteUserActive: boolean,
     isWebcamActive: boolean,
     isMicActive: boolean,
@@ -17,6 +19,8 @@ const initialState: VirtualRoomState = {
     isActive: false,
     id: "",
     peerConnection: null,
+    localStream: null,
+    remoteStream: null,
     isRemoteUserActive: false,
     isWebcamActive: true,
     isMicActive: true,
@@ -38,6 +42,12 @@ export const virtualRoomSlice = createSlice({
         setPeerConnection: (state, action: PayloadAction<RTCPeerConnection>) => {
             state.peerConnection = action.payload
         },
+        setLocalStream: (state, action: PayloadAction<MediaStream>) => {
+            state.localStream = action.payload
+        },
+        setRemoteStream: (state, action: PayloadAction<MediaStream>) => {
+            state.remoteStream = action.payload
+        },
         setIsRemoteUserActive: (state, action: PayloadAction<boolean>) => {
             state.isRemoteUserActive = action.payload
         },
@@ -53,7 +63,7 @@ export const virtualRoomSlice = createSlice({
     }
 })
 
-export const {setTitle, setIsActive, setId, setPeerConnection, setIsRemoteUserActive, setIsWebcamActive, setIsMicActive, clearVirtualRoom} = virtualRoomSlice.actions
+export const {setTitle, setIsActive, setId, setPeerConnection, setLocalStream, setRemoteStream, setIsRemoteUserActive, setIsWebcamActive, setIsMicActive, clearVirtualRoom} = virtualRoomSlice.actions
 
 export const selectVirtualRoom = (state: RootState) => state.virtualRoom
 

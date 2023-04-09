@@ -8,7 +8,7 @@ import { db } from '@/firebase'
 import { v4 as uuid } from 'uuid'
 import { setMainPageTitle } from '@/store/slices/mainPageSlice'
 import { useDispatch, useSelector } from 'react-redux'
-import { clearVirtualRoom, selectVirtualRoom, setId, setIsActive, setIsMicActive, setIsRemoteUserActive, setIsWebcamActive, setPeerConnection, setTitle } from '@/store/slices/virtualRoomSlice'
+import { clearVirtualRoom, selectVirtualRoom, setId, setIsActive, setIsMicActive, setIsRemoteUserActive, setIsWebcamActive, setLocalStream, setPeerConnection, setRemoteStream, setTitle } from '@/store/slices/virtualRoomSlice'
 import VirtualRoomChat from './VirtualRoomChat'
 import Video from './Video'
 
@@ -29,9 +29,6 @@ function VirtualRoom({mode}:{ mode:string }) {
     const [userCount, setUserCount] = useState(2)
     const virtualRoom = useSelector(selectVirtualRoom)
     const dispatch = useDispatch()
-
-    const [localStream, setLocalStream] = useState<MediaStream>()
-    const [remoteStream, setRemoteStream] = useState<MediaStream>();
     
     const localVideoRef = useRef<any>()
     const remoteVideoRef = useRef<any>()
@@ -49,34 +46,39 @@ function VirtualRoom({mode}:{ mode:string }) {
 
     useEffect(() => {
         !virtualRoom.isActive && initialSetup()
+        setMainPageTitle(`Virtual Room: ${virtualRoom.title}`)
 
         // return () => {!virtualRoom.isActive && initialSetup()}
     }, [])
 
     useEffect(() => {
-        resetLocalStream()
-    }, [virtualRoom.isWebcamActive, virtualRoom.isMicActive])
+        localVideoRef.current.srcObject = virtualRoom.localStream
+        remoteVideoRef.current.srcObject = virtualRoom.remoteStream
+    }, [virtualRoom.localStream, virtualRoom.remoteStream])
 
-    function resetLocalStream() {
-        if(localStream) {
-            localStream.getTracks().forEach((track: MediaStreamTrack) => {
-                track.stop()
-            })
-        }
+    // useEffect(() => {
+    //     resetLocalStream()
+    // }, [virtualRoom.isWebcamActive, virtualRoom.isMicActive])
 
-        if(!virtualRoom.isWebcamActive && !virtualRoom.isMicActive) return
+    // async function resetLocalStream() {
+    //     virtualRoom.localStream && virtualRoom.localStream.getTracks().forEach((track: MediaStreamTrack) => {
+    //         track.stop()
+    //     })
+
+    //     if(!virtualRoom.isWebcamActive && !virtualRoom.isMicActive) return
+
+    //     const newLocalStrean = await navigator.mediaDevices.getUserMedia({
+    //         video: virtualRoom.isWebcamActive,
+    //         audio: virtualRoom.isMicActive
+    //     })
+
+    //     dispatch(setLocalStream(newLocalStrean))
+    //     localVideoRef.current.srcObject = newLocalStrean
         
-        navigator.mediaDevices.getUserMedia({
-            video: virtualRoom.isWebcamActive,
-            audio: virtualRoom.isMicActive
-        }).then((stream: MediaStream) => {
-            setLocalStream(stream)
-            // localVideoRef.current.srcObject = localStream
-            stream.getTracks().forEach((track: MediaStreamTrack) => {
-                peer.addTrack(track, stream)
-            })
-        })
-    }
+    //     newLocalStrean.getTracks().forEach((track: MediaStreamTrack) => {
+    //         peer.addTrack(track, newLocalStrean)
+    //     })
+    // }
 
     async function collectIceCandidates(
                         roomRef:DocumentReference<DocumentData>,
@@ -102,16 +104,16 @@ function VirtualRoom({mode}:{ mode:string }) {
     }
 
     const setupSources = async () => {
-        const constraints = { audio: false, video: true }; 
+        const constraints = { audio: true, video: true }; 
         const lStream = await navigator.mediaDevices.getUserMedia(constraints)
-        setLocalStream(lStream)
+        dispatch(setLocalStream(lStream))
 
         lStream.getTracks().forEach((track) => {
             peer.addTrack(track, lStream)
         })
 
         const rStream = new MediaStream()
-        setRemoteStream(rStream)
+        dispatch(setRemoteStream(rStream))
 
         peer.ontrack = (event) => {
             event.streams[0].getTracks().forEach((track) => {
@@ -119,14 +121,11 @@ function VirtualRoom({mode}:{ mode:string }) {
             })
         }
 
-        // let localVideo = localVideoRef?.current
-        // if (localVideo) localVideo.srcObject = localStream
+        let localVideo = localVideoRef?.current
+        if (localVideo) localVideo.srcObject = lStream
         
-        // let remoteVideo = remoteVideoRef.current
-        // if (remoteVideo) remoteVideo.srcObject = remoteStream
-
-        // localVideo?.play()
-        // remoteVideo?.play()
+        let remoteVideo = remoteVideoRef.current
+        if (remoteVideo) remoteVideo.srcObject = rStream
 
         if(mode == "create") createOffer()
         else if (mode == "join") answerOffer()
@@ -253,10 +252,16 @@ function VirtualRoom({mode}:{ mode:string }) {
 
     function switchMicState() {
         dispatch(setIsMicActive(!virtualRoom.isMicActive))
+        
+        let micTrack = virtualRoom.localStream?.getTracks().find(track => track.kind === "audio")
+        if(micTrack) micTrack.enabled = !micTrack.enabled
     }
 
     function switchVideoCamState() {
         dispatch(setIsWebcamActive(!virtualRoom.isWebcamActive))
+
+        let videoTrack = virtualRoom.localStream?.getTracks().find(track => track.kind === "video")
+        if(videoTrack) videoTrack.enabled = !videoTrack.enabled
     }
 
   return (
@@ -266,25 +271,25 @@ function VirtualRoom({mode}:{ mode:string }) {
                 {
                     // virtualRoom.isRemoteUserActive && 
                     <div className='w-11/12 max-w-sm h-full sm:max-w-full sm:w-fit rounded-xl bg-color-2nd'>
-                        <Video srcObject={remoteStream!} autoPlay={true} className='video' />
-                        {/* <video ref={remoteVideoRef} className='video'></video> */}
+                        {/* <Video srcObject={remoteStream!} autoPlay={true} className='video' /> */}
+                        <video ref={remoteVideoRef} autoPlay className='video'></video>
                     </div>
                 }
                 <div className='main-participant w-11/12 max-w-sm h-full sm:max-w-full sm:w-fit rounded-xl bg-color-2nd'>
-                    <Video srcObject={localStream!} autoPlay={true} className='video' />
-                    {/* <video ref={localVideoRef} className='video'></video> */}
+                    {/* <Video srcObject={localStream!} autoPlay={true} className='video' /> */}
+                    <video ref={localVideoRef} muted={true} autoPlay className='video'></video>
                 </div>
             </div>
             <div className='flex w-full mt-5 justify-between items-center'>
                 <div title='Copy Room Id' className='flex items-center
                                 bg-color-2nd
-                                p-3 space-x-3
+                                p-3 sm:space-x-3
                                 rounded-md
                                 text-xs font-medium
                                 clickable'
                     onClick={() => copy(virtualRoom.id!)}>
-                    <p className='truncate sm:w-20'>{virtualRoom.id}</p>
-                    <div className='h-full line outline-gray-300/70 dark:outline-gray-7 00' />
+                    <p className='truncate hidden sm:inline w-[5rem]'>{virtualRoom.id}</p>
+                    {/* <div className='h-full line outline-gray-300/70 dark:outline-gray-7 00' /> */}
                     {/* <FiCopy className='h-6 w-6' /> */}
                     <ClipboardIcon className='h-6 w-6'/>   
                 </div>
@@ -294,13 +299,13 @@ function VirtualRoom({mode}:{ mode:string }) {
                         <BsMic
                         title='Mute'
                         onClick={switchMicState}
-                        className={`clickable-icon max-h-12 max-w-12`}
+                        className={`clickable-icon h-12 w-12`}
                         />
                         :
                         <BsMicMute
                         title='Unmute'
                         onClick={switchMicState}
-                        className={`clickable-icon max-h-12 max-w-12 bg-red-500 hover:bg-red-400 dark:hover:bg-red-400 active:bg-red-600 dark:active:bg-red-600 text-white`}
+                        className={`clickable-icon h-12 w-12 bg-red-500 hover:bg-red-400 dark:hover:bg-red-400 active:bg-red-600 dark:active:bg-red-600 text-white`}
                         />
                     }
 
@@ -308,22 +313,22 @@ function VirtualRoom({mode}:{ mode:string }) {
                         virtualRoom.isWebcamActive ?
                         <VideoCameraIcon
                         onClick={switchVideoCamState}
-                        className={`clickable-icon max-h-12 max-w-12`}
+                        className={`clickable-icon h-12 w-12`}
                         />
                         :
                         <VideoCameraSlashIcon
                         onClick={switchVideoCamState}
-                        className={`clickable-icon max-h-12 max-w-12 bg-red-500 hover:bg-red-400 dark:hover:bg-red-400 active:bg-red-600 dark:active:bg-red-600 text-white`}
+                        className={`clickable-icon h-12 w-12 bg-red-500 hover:bg-red-400 dark:hover:bg-red-400 active:bg-red-600 dark:active:bg-red-600 text-white`}
                         />
                     }
 
                     <Squares2X2Icon 
                     onClick={() => {}}
-                    className={`clickable-icon ${false && 'icon-bg-hover max-h-12 max-w-12'}`}
+                    className={`clickable-icon ${false && 'icon-bg-hover h-12 w-12'}`}
                     />
 
                 </div>
-                <div onClick={hangUp} className='rounded-md cursor-pointer p-3 max-h-12 max-w-12
+                <div onClick={hangUp} className='rounded-md cursor-pointer p-3 h-12 w-max
                             flex flex-row space-x-1 items-center
                             text-white
                             bg-red-500 hover:bg-red-500/90 active:bg-red-600   
