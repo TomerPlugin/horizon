@@ -12,9 +12,6 @@ import { clearVirtualRoom, selectVirtualRoom, setId, setIsActive, setIsMicActive
 import VirtualRoomChat from './VirtualRoomChat'
 import Video from './Video'
 
-// let localStream: MediaStream;
-// let remoteStream: MediaStream;
-
 const servers = {
     iceServers: [
         {
@@ -26,43 +23,60 @@ const servers = {
     ],
 }
 
+let peer: RTCPeerConnection
+
 function VirtualRoom({mode}:{ mode:string }) {
     const [userCount, setUserCount] = useState(2)
     const virtualRoom = useSelector(selectVirtualRoom)
     const dispatch = useDispatch()
 
-    !virtualRoom.peerConnection && dispatch(setPeerConnection(new RTCPeerConnection(servers)))
+    const [localStream, setLocalStream] = useState<MediaStream>()
+    const [remoteStream, setRemoteStream] = useState<MediaStream>();
     
     const localVideoRef = useRef<any>()
     const remoteVideoRef = useRef<any>()
 
-    // useEffect(() => {
-    //     resetLocalStream()
-    // }, [localStream, isWebcamActive, isMicActive])
+    function initialSetup() {
+        console.log("setup")
+        
+        peer = new RTCPeerConnection(servers)
+        dispatch(setPeerConnection(peer))
+
+        dispatch(setMainPageTitle(`Virtual Room: ${virtualRoom.title}`))
+        dispatch(setIsActive(true))
+        setupSources()
+    }
 
     useEffect(() => {
-        function setup() {
-            dispatch(setMainPageTitle(`Virtual Room: ${virtualRoom.title}`))
-            dispatch(setIsActive(true))
-            setupSources()
-        }
+        !virtualRoom.isActive && initialSetup()
 
-        return () => {!virtualRoom.isActive && setup()}
+        // return () => {!virtualRoom.isActive && initialSetup()}
     }, [])
 
-    // function resetLocalStream() {
-    //     if(localStream) {
-    //         localStream.getTracks().forEach((track: MediaStreamTrack) => {
-    //             track.stop()
-    //         })
-    //     }
-    //     navigator.mediaDevices.getUserMedia({
-    //         video: virtualRoom.isWebcamActive,
-    //         audio: virtualRoom.isMicActive
-    //     }).then((stream) => {
-    //         setLocalStream(stream)
-    //     })
-    // }
+    useEffect(() => {
+        resetLocalStream()
+    }, [virtualRoom.isWebcamActive, virtualRoom.isMicActive])
+
+    function resetLocalStream() {
+        if(localStream) {
+            localStream.getTracks().forEach((track: MediaStreamTrack) => {
+                track.stop()
+            })
+        }
+
+        if(!virtualRoom.isWebcamActive && !virtualRoom.isMicActive) return
+        
+        navigator.mediaDevices.getUserMedia({
+            video: virtualRoom.isWebcamActive,
+            audio: virtualRoom.isMicActive
+        }).then((stream: MediaStream) => {
+            setLocalStream(stream)
+            // localVideoRef.current.srcObject = localStream
+            stream.getTracks().forEach((track: MediaStreamTrack) => {
+                peer.addTrack(track, stream)
+            })
+        })
+    }
 
     async function collectIceCandidates(
                         roomRef:DocumentReference<DocumentData>,
@@ -70,7 +84,7 @@ function VirtualRoom({mode}:{ mode:string }) {
                             
         const candidatesCollection = collection(roomRef, "offerCandidates");
 
-        virtualRoom.peerConnection!.addEventListener('icecandidate', event => {
+        peer.addEventListener('icecandidate', event => {
             if (event.candidate) {
                 const json = event.candidate.toJSON();
                 addDoc(candidatesCollection, json)
@@ -81,38 +95,38 @@ function VirtualRoom({mode}:{ mode:string }) {
             snapshot.docChanges().forEach(change => {
                 if (change.type === "added") {
                     const candidate = new RTCIceCandidate(change.doc.data());
-                    virtualRoom.peerConnection!.addIceCandidate(candidate);
+                    peer.addIceCandidate(candidate);
                 }
             });
         })
     }
 
     const setupSources = async () => {
-        const localStream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: false
+        const constraints = { audio: false, video: true }; 
+        const lStream = await navigator.mediaDevices.getUserMedia(constraints)
+        setLocalStream(lStream)
+
+        lStream.getTracks().forEach((track) => {
+            peer.addTrack(track, lStream)
         })
 
-        localStream.getTracks().forEach((track) => {
-            virtualRoom.peerConnection!.addTrack(track, localStream)
-        })
+        const rStream = new MediaStream()
+        setRemoteStream(rStream)
 
-        const remoteStream = new MediaStream()
-
-        virtualRoom.peerConnection!.ontrack = (event) => {
+        peer.ontrack = (event) => {
             event.streams[0].getTracks().forEach((track) => {
-                remoteStream.addTrack(track)
+                rStream.addTrack(track)
             })
         }
 
-        let localVideo = localVideoRef?.current
-        if (localVideo) localVideo.srcObject = localStream
+        // let localVideo = localVideoRef?.current
+        // if (localVideo) localVideo.srcObject = localStream
         
-        let remoteVideo = remoteVideoRef.current
-        if (remoteVideo) remoteVideo.srcObject = remoteStream
+        // let remoteVideo = remoteVideoRef.current
+        // if (remoteVideo) remoteVideo.srcObject = remoteStream
 
-        localVideo?.play()
-        remoteVideo?.play()
+        // localVideo?.play()
+        // remoteVideo?.play()
 
         if(mode == "create") createOffer()
         else if (mode == "join") answerOffer()
@@ -125,10 +139,10 @@ function VirtualRoom({mode}:{ mode:string }) {
 
         dispatch(setId(roomDocRef.id))
 
-        const offerDescription = await virtualRoom.peerConnection!.createOffer()
-        await virtualRoom.peerConnection!.setLocalDescription(offerDescription)
+        const offerDescription = await peer.createOffer()
+        await peer.setLocalDescription(offerDescription)
 
-        virtualRoom.peerConnection!.onicecandidate = (event) => {
+        peer.onicecandidate = (event) => {
             event.candidate && addDoc(offerCandidates, event.candidate.toJSON())
         }
 
@@ -146,15 +160,15 @@ function VirtualRoom({mode}:{ mode:string }) {
 
         onSnapshot(roomDocRef, async snapshot => {
             const data = snapshot.data()
-            if(!virtualRoom.peerConnection!.remoteDescription && data?.answer) {
+            if(!peer.remoteDescription && data?.answer) {
                 dispatch(setIsRemoteUserActive(true))
                 const answerDecription = new RTCSessionDescription(data.answer)
-                virtualRoom.peerConnection!.setRemoteDescription(answerDecription)
+                peer.setRemoteDescription(answerDecription)
             }
         })
 
-        virtualRoom.peerConnection!.onconnectionstatechange = (event) => {
-            if(virtualRoom.peerConnection!.connectionState === "disconnected") {
+        peer.onconnectionstatechange = (event) => {
+            if(peer.connectionState === "disconnected") {
                 dispatch(setIsRemoteUserActive(false))
                 alert("Remote user has disconnected!")
                 
@@ -178,14 +192,14 @@ function VirtualRoom({mode}:{ mode:string }) {
 
         const offerDescription = (await getDoc(roomDocRef)).data()?.offer
 
-        await virtualRoom.peerConnection!.setRemoteDescription(offerDescription)
+        await peer.setRemoteDescription(offerDescription)
         
-        virtualRoom.peerConnection!.onicecandidate = (event) => {
+        peer.onicecandidate = (event) => {
             event.candidate && addDoc(answerCandidates, event.candidate.toJSON())
         }
 
-        const answerDescription = await virtualRoom.peerConnection!.createAnswer()
-        await virtualRoom.peerConnection!.setLocalDescription(answerDescription)
+        const answerDescription = await peer.createAnswer()
+        await peer.setLocalDescription(answerDescription)
 
         const roomWithAnswer = {
             answer: {
@@ -200,8 +214,8 @@ function VirtualRoom({mode}:{ mode:string }) {
 
         dispatch(setIsRemoteUserActive(true))
 
-        virtualRoom.peerConnection!.onconnectionstatechange = (event) => {
-            if(virtualRoom.peerConnection!.connectionState === "disconnected") {
+        peer.onconnectionstatechange = (event) => {
+            if(peer.connectionState === "disconnected") {
                 dispatch(setIsRemoteUserActive(false))
                 alert("Remote user has disconnected!")
                 
@@ -212,7 +226,7 @@ function VirtualRoom({mode}:{ mode:string }) {
     }
 
     const hangUp = async () => {
-        virtualRoom.peerConnection!.close()
+        peer.close()
         
         if(virtualRoom.id) {
             const roomDocRef = doc(db, "rooms", virtualRoom.id!)
@@ -252,13 +266,13 @@ function VirtualRoom({mode}:{ mode:string }) {
                 {
                     // virtualRoom.isRemoteUserActive && 
                     <div className='w-11/12 max-w-sm h-full sm:max-w-full sm:w-fit rounded-xl bg-color-2nd'>
-                        {/* <Video srcObject={remoteStream} autoPlay={true} className='video' /> */}
-                        <video ref={remoteVideoRef} className='video'></video>
+                        <Video srcObject={remoteStream!} autoPlay={true} className='video' />
+                        {/* <video ref={remoteVideoRef} className='video'></video> */}
                     </div>
                 }
                 <div className='main-participant w-11/12 max-w-sm h-full sm:max-w-full sm:w-fit rounded-xl bg-color-2nd'>
-                    {/* <Video srcObject={localStream} autoPlay={true} className='video' /> */}
-                    <video ref={localVideoRef} className='video'></video>
+                    <Video srcObject={localStream!} autoPlay={true} className='video' />
+                    {/* <video ref={localVideoRef} className='video'></video> */}
                 </div>
             </div>
             <div className='flex w-full mt-5 justify-between items-center'>

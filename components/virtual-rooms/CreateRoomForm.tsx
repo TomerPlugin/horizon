@@ -19,6 +19,8 @@ function CreateRoomForm() {
   }
 
   function createNewRoom() {
+    if(input == '') return
+    
     dispatch(setTitle(input))
     dispatch(setMainPageComponent(<VirtualRoom mode='create' />))
   }

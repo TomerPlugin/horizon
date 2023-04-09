@@ -19,7 +19,7 @@ const initialState: VirtualRoomState = {
     peerConnection: null,
     isRemoteUserActive: false,
     isWebcamActive: true,
-    isMicActive: false,
+    isMicActive: true,
 }
 
 export const virtualRoomSlice = createSlice({
@@ -45,7 +45,7 @@ export const virtualRoomSlice = createSlice({
             state.isWebcamActive = action.payload
         },
         setIsMicActive: (state, action: PayloadAction<boolean>) => {
-            state.isWebcamActive = action.payload
+            state.isMicActive = action.payload
         },
         clearVirtualRoom: (state) => {
             state = initialState

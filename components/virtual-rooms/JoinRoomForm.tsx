@@ -23,6 +23,8 @@ function JoinRoomForm() {
   }
 
   function joinRoom() {
+    if(input == '') return
+    
     dispatch(setId(input))
     dispatch(setMainPageComponent(<VirtualRoom mode='join'/>))
     
