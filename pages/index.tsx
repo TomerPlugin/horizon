@@ -12,8 +12,6 @@ import { useSelector } from 'react-redux'
 import { selectMainPage } from '@/store/slices/mainPageSlice'
 import Loading from '@/components/Loading'
 
-// const inter = Inter({ subsets: ['latin'] })
-
 export default function Home() {
   const { loading, user } = useAuth()
   const [chatInfo, setChatInfo] = useState<DocumentData>()

@@ -14,7 +14,7 @@ import VirtualRooms from './virtual-rooms/VirtualRooms'
 import { selectVirtualRoom } from '@/store/slices/virtualRoomSlice'
 import { selectChatInfo } from '@/store/slices/chatInfoSlice'
 
-let isDarkMode = true;
+let isDarkMode = false;
 
 function SideBar() {
 
