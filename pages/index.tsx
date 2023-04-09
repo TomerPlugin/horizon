@@ -32,8 +32,7 @@ export default function Home() {
       <div className='flex flex-col-reverse h-full sm:flex-row'>
 
         <div className='flex flex-col-reverse sm:h-full sm:flex-row'>
-          <SideBar chatInfo={chatInfo}
-                  setChatInfo={setChatInfo}/>
+          <SideBar />
           <div className='line' />
         </div>
 
