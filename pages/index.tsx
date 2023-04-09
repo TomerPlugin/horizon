@@ -22,16 +22,6 @@ export default function Home() {
   if(loading) return <Loading />
   else if(!user) return <Login />
 
-  // useEffect(() => {    
-  //   if(user) {
-  //     setDoc(doc(db, "users", user.uid), {
-  //       email: user.email,
-  //       lastSeen: serverTimestamp(),
-  //       photoUrl: user.photoURL
-  //     }, { merge: true });
-  //   }
-  // })
-
   return (
     <div className='bg-main-color text-main-color h-screen'>
       <Head>
@@ -54,9 +44,7 @@ export default function Home() {
             <div className='line' />
           </div>
 
-          {
-            mainPage.component
-          }
+          { mainPage.component }
 
         </section>
       </div>

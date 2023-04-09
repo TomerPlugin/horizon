@@ -5,13 +5,15 @@ import { FiCopy } from 'react-icons/fi'
 import copy from 'copy-to-clipboard'
 import { CollectionReference, DocumentData, DocumentReference, addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '@/firebase'
-import { off } from 'process'
+import { v4 as uuid } from 'uuid'
 import { setMainPageTitle } from '@/store/slices/mainPageSlice'
 import { useDispatch, useSelector } from 'react-redux'
-import { clearVirtualRoom, selectVirtualRoom, setId, setIsActive, setIsMicActive, setIsWebcamActive, setPeerConnection } from '@/store/slices/virtualRoomSlice'
+import { clearVirtualRoom, selectVirtualRoom, setId, setIsActive, setIsMicActive, setIsRemoteUserActive, setIsWebcamActive, setPeerConnection, setTitle } from '@/store/slices/virtualRoomSlice'
+import VirtualRoomChat from './VirtualRoomChat'
+import Video from './Video'
 
-// let localStream;
-// let remoteStream;
+// let localStream: MediaStream;
+// let remoteStream: MediaStream;
 
 const servers = {
     iceServers: [
@@ -26,7 +28,6 @@ const servers = {
 
 function VirtualRoom({mode}:{ mode:string }) {
     const [userCount, setUserCount] = useState(2)
-    const [localStream, setLocalStream] = useState<any>()
     const virtualRoom = useSelector(selectVirtualRoom)
     const dispatch = useDispatch()
 
@@ -45,7 +46,8 @@ function VirtualRoom({mode}:{ mode:string }) {
             dispatch(setIsActive(true))
             setupSources()
         }
-        return () => setup()
+
+        return () => {!virtualRoom.isActive && setup()}
     }, [])
 
     // function resetLocalStream() {
@@ -61,10 +63,6 @@ function VirtualRoom({mode}:{ mode:string }) {
     //         setLocalStream(stream)
     //     })
     // }
-
-    const getTimeEpoch = () => {
-        return new Date().getTime().toString();                             
-    }
 
     async function collectIceCandidates(
                         roomRef:DocumentReference<DocumentData>,
@@ -94,12 +92,12 @@ function VirtualRoom({mode}:{ mode:string }) {
             video: true,
             audio: false
         })
-        
-        const remoteStream = new MediaStream()
 
         localStream.getTracks().forEach((track) => {
             virtualRoom.peerConnection!.addTrack(track, localStream)
         })
+
+        const remoteStream = new MediaStream()
 
         virtualRoom.peerConnection!.ontrack = (event) => {
             event.streams[0].getTracks().forEach((track) => {
@@ -121,7 +119,7 @@ function VirtualRoom({mode}:{ mode:string }) {
     }
 
     const createOffer = async () =>  {
-        const roomDocRef = doc(db, "rooms", getTimeEpoch())
+        const roomDocRef = doc(db, "rooms", String(uuid().toUpperCase()))
         const offerCandidates = collection(roomDocRef, "offerCandidates")
         const answerCandidates = collection(roomDocRef, "answerCandidates")
 
@@ -138,7 +136,8 @@ function VirtualRoom({mode}:{ mode:string }) {
             offer: {
                 sdp: offerDescription.sdp,
                 type: offerDescription.type,
-            }
+            },
+            title: virtualRoom.title,
         }
 
         await setDoc(roomDocRef, roomWithOffer)
@@ -147,24 +146,35 @@ function VirtualRoom({mode}:{ mode:string }) {
 
         onSnapshot(roomDocRef, async snapshot => {
             const data = snapshot.data()
-            console.log('Got updated room:', snapshot.data())
             if(!virtualRoom.peerConnection!.remoteDescription && data?.answer) {
-                console.log('Set remote description: ', data.answer)
+                dispatch(setIsRemoteUserActive(true))
                 const answerDecription = new RTCSessionDescription(data.answer)
                 virtualRoom.peerConnection!.setRemoteDescription(answerDecription)
             }
         })
 
         virtualRoom.peerConnection!.onconnectionstatechange = (event) => {
-            if(virtualRoom.peerConnection!.connectionState === "disconnected") hangUp
+            if(virtualRoom.peerConnection!.connectionState === "disconnected") {
+                dispatch(setIsRemoteUserActive(false))
+                alert("Remote user has disconnected!")
+                
+                dispatch(clearVirtualRoom())
+                window.location.reload()
+            }
         }
     }
 
     const answerOffer = async () => {
-        console.log("Answering room")
         const roomDocRef = doc(db, "rooms", virtualRoom.id!)
         const offerCandidates = collection(roomDocRef, "offerCandidates")
         const answerCandidates = collection(roomDocRef, "answerCandidates")
+
+        await getDoc(roomDocRef).then((doc) => {
+            const roomTitle = doc.data()?.title
+            
+            setTitle(roomTitle)
+            dispatch(setMainPageTitle(`Virtual Room: ${ roomTitle }`))
+        })
 
         const offerDescription = (await getDoc(roomDocRef)).data()?.offer
 
@@ -188,8 +198,16 @@ function VirtualRoom({mode}:{ mode:string }) {
 
         collectIceCandidates(roomDocRef, offerCandidates)
 
+        dispatch(setIsRemoteUserActive(true))
+
         virtualRoom.peerConnection!.onconnectionstatechange = (event) => {
-            if(virtualRoom.peerConnection!.connectionState === "disconnected") hangUp
+            if(virtualRoom.peerConnection!.connectionState === "disconnected") {
+                dispatch(setIsRemoteUserActive(false))
+                alert("Remote user has disconnected!")
+                
+                dispatch(clearVirtualRoom())
+                window.location.reload()
+            }
         }
     }
 
@@ -201,16 +219,19 @@ function VirtualRoom({mode}:{ mode:string }) {
             const offerCandidates = collection(roomDocRef, "offerCandidates")
             const answerCandidates = collection(roomDocRef, "answerCandidates")
             
-            for (const candidate of (await getDocs(offerCandidates)).docs) {
-                deleteDoc(candidate.ref)
-            }
-            for (const candidate of (await getDocs(answerCandidates)).docs) {
-                deleteDoc(candidate.ref)
-            }
+            const offersSnapshot = await getDocs(offerCandidates)
+            const answersSnapshot = await getDocs(answerCandidates)
+
+            offersSnapshot.forEach(async (candidate) => {
+                await deleteDoc(candidate.ref)
+            })
+
+            answersSnapshot.forEach(async (candidate) => {
+                await deleteDoc(candidate.ref)
+            })
         
             deleteDoc(roomDocRef)
             
-            alert("Room Ended!")
             dispatch(clearVirtualRoom())
             window.location.reload()
         }
@@ -227,25 +248,20 @@ function VirtualRoom({mode}:{ mode:string }) {
   return (
     <div className='w-full h-full flex flex-row'>
         <div className={`flex flex-col w-full m-5 `}>
-            <div className={`flex flex-col space-y-5 items-center ${userCount > 2 ? "" : "sm:flex-row sm:space-x-5 sm:space-y-0"} sm:w-full sm:h-full h-full w-full`}>
+            <div className={`flex flex-col w-full space-y-5 items-center ${userCount > 2 ? "" : "sm:flex-row sm:space-x-5 sm:space-y-0"} sm:w-full sm:h-full h-full w-full`}>
                 {
-                    userCount > 2 ?
-                    <div className='w-full flex flex-row space-x-3 justify-center'>
-                        <div className='participant w-full max-w-[10rem] h-[6rem] bg-color-2nd rounded-xl'></div>
-                        <div className='participant w-full max-w-[10rem] h-[6rem] bg-color-2nd rounded-xl'></div>
-                        <div className='participant w-full max-w-[10rem] h-[6rem] bg-color-2nd rounded-xl'></div>
-                        <div className='participant w-full max-w-[10rem] h-[6rem] bg-color-2nd rounded-xl'></div>
-                    </div>
-                    : userCount > 1 &&
-                    <div className='w-full h-full sm:w-fit rounded-xl bg-color-2nd'>
+                    // virtualRoom.isRemoteUserActive && 
+                    <div className='w-11/12 max-w-sm h-full sm:max-w-full sm:w-fit rounded-xl bg-color-2nd'>
+                        {/* <Video srcObject={remoteStream} autoPlay={true} className='video' /> */}
                         <video ref={remoteVideoRef} className='video'></video>
                     </div>
                 }
-                <div className='main-participant w-full h-full sm:w-fit rounded-xl bg-color-2nd'>
+                <div className='main-participant w-11/12 max-w-sm h-full sm:max-w-full sm:w-fit rounded-xl bg-color-2nd'>
+                    {/* <Video srcObject={localStream} autoPlay={true} className='video' /> */}
                     <video ref={localVideoRef} className='video'></video>
                 </div>
             </div>
-            <div className='flex mt-5 justify-between items-center'>
+            <div className='flex w-full mt-5 justify-between items-center'>
                 <div title='Copy Room Id' className='flex items-center
                                 bg-color-2nd
                                 p-3 space-x-3
@@ -253,10 +269,10 @@ function VirtualRoom({mode}:{ mode:string }) {
                                 text-xs font-medium
                                 clickable'
                     onClick={() => copy(virtualRoom.id!)}>
-                    <p className='truncate w-16 sm:w-20'>{virtualRoom.id}</p>
+                    <p className='truncate sm:w-20'>{virtualRoom.id}</p>
                     <div className='h-full line outline-gray-300/70 dark:outline-gray-7 00' />
-                    <FiCopy className='h-6 w-6' />
-                    {/* <ClipboardIcon className='h-6 w-6'/>    */}
+                    {/* <FiCopy className='h-6 w-6' /> */}
+                    <ClipboardIcon className='h-6 w-6'/>   
                 </div>
                 <div className='flex space-x-2'>
                     {
@@ -264,13 +280,13 @@ function VirtualRoom({mode}:{ mode:string }) {
                         <BsMic
                         title='Mute'
                         onClick={switchMicState}
-                        className={`clickable-icon`}
+                        className={`clickable-icon max-h-12 max-w-12`}
                         />
                         :
                         <BsMicMute
                         title='Unmute'
                         onClick={switchMicState}
-                        className={`clickable-icon bg-red-500 hover:bg-red-400 dark:hover:bg-red-400 active:bg-red-600 dark:active:bg-red-600 text-white`}
+                        className={`clickable-icon max-h-12 max-w-12 bg-red-500 hover:bg-red-400 dark:hover:bg-red-400 active:bg-red-600 dark:active:bg-red-600 text-white`}
                         />
                     }
 
@@ -278,32 +294,33 @@ function VirtualRoom({mode}:{ mode:string }) {
                         virtualRoom.isWebcamActive ?
                         <VideoCameraIcon
                         onClick={switchVideoCamState}
-                        className={`clickable-icon `}
+                        className={`clickable-icon max-h-12 max-w-12`}
                         />
                         :
                         <VideoCameraSlashIcon
                         onClick={switchVideoCamState}
-                        className={`clickable-icon bg-red-500 hover:bg-red-400 dark:hover:bg-red-400 active:bg-red-600 dark:active:bg-red-600 text-white`}
+                        className={`clickable-icon max-h-12 max-w-12 bg-red-500 hover:bg-red-400 dark:hover:bg-red-400 active:bg-red-600 dark:active:bg-red-600 text-white`}
                         />
                     }
 
                     <Squares2X2Icon 
                     onClick={() => {}}
-                    className={`clickable-icon ${false && 'icon-bg-hover'}`}
+                    className={`clickable-icon ${false && 'icon-bg-hover max-h-12 max-w-12'}`}
                     />
 
                 </div>
-                <div onClick={hangUp} className='rounded-md cursor-pointer p-3
+                <div onClick={hangUp} className='rounded-md cursor-pointer p-3 max-h-12 max-w-12
+                            flex flex-row space-x-1 items-center
+                            text-white
                             bg-red-500 hover:bg-red-500/90 active:bg-red-600   
                             dark:bg-red-600 dark:hover:bg-red-500 dark:active:bg-red-600/60
                             transition duration-75 ease-in-out'>
-                    <p className='text-white'>Leave Room</p>
+                    <p>Leave</p>
+                    <p className='hidden sm:inline'>Room</p>
                 </div>
             </div>
         </div>
-        <div className='virtualroom-chat hidden lg:inline m-5 ml-0 bg-color-2nd rounded-2xl w-5/12'>
-
-        </div>
+        <VirtualRoomChat />
     </div>
   )
 }

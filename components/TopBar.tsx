@@ -14,16 +14,14 @@ function TopBar() {
     const dispatch = useDispatch()
 
     function getSectionIcon() {
-        switch(mainPage.title) {
-            case ('Chat'):
-              return <ChatBubbleOvalLeftEllipsisIcon className='h-10 w-10 py-1.5'/>
-            case ('Contacts'):
-              return <IoMdContacts className='h-10 w-10 py-1.5'/>
-            case ('Virtual Rooms'):
-              return <BsFillBoxFill className='h-10 w-10 py-1.5'/>
-            case ('Options'):
-                return <GiHamburgerMenu className='h-10 w-10 py-1.5'/>
-        }
+        if (mainPage.title === 'Chat')
+            return <ChatBubbleOvalLeftEllipsisIcon className='h-10 w-10 py-1.5'/>
+        else if (mainPage.title === 'Contacts')
+            return <IoMdContacts className='h-10 w-10 py-1.5'/>
+        else if (mainPage.title.includes('Virtual Room'))
+            return <BsFillBoxFill className='h-10 w-10 py-1.5'/>
+        else if (mainPage.title === 'Options')
+            return <GiHamburgerMenu className='h-10 w-10 py-1.5'/>
     }
         
     return (
