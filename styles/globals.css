@@ -89,7 +89,6 @@ body {
   overflow-x: hidden;
 }
 
-
 a, button, input, textarea, select, option, img, .clickable-icon, .clickable {
   -webkit-app-region: no-drag;
 }

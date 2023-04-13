@@ -14,8 +14,8 @@ interface Inputs {
   const { register, handleSubmit, formState: { errors } } = useForm<Inputs>()
   const { googleSignIn } = useAuth()
   
-  const onSubmit: SubmitHandler<Inputs> = async ({username}) => {
-    googleSignIn(username)
+  const onSubmit: SubmitHandler<Inputs> = async () => {
+    googleSignIn()
   }
   
   return (

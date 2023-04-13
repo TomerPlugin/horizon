@@ -11,6 +11,9 @@ module.exports = {
       backgroundImage: {
         "hero": "url('/images/hero.jpg')",
         "logo": "url('/images/logo.jpg')",
+      },
+      animation: {
+        'spin-slow': 'spin 2s linear infinite',
       }
     },
   },

@@ -2,7 +2,7 @@ import '@/styles/globals.css'
 import type { AppProps } from 'next/app'
 import useAuth, { AuthProvider } from '../hooks/useAuth'
 import { auth } from '@/firebase'
-import Login from '@/components/Login';
+import Login from '@/components/login/Login';
 import Loading from '@/components/Loading'
 import { store } from '../store/store'
 import { Provider } from 'react-redux'

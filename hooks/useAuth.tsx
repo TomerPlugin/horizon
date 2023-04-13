@@ -18,7 +18,7 @@ import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 
 interface IAuth {
   user: User | null
-  googleSignIn: (username: string | null) => Promise<void>
+  googleSignIn: () => Promise<void>
   signUp: (username: string, email: string, password: string) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
@@ -64,7 +64,7 @@ export const AuthProvider = ({children}:AuthProviderProps) => {
     )
 
     // Signing in with Google popup
-    const googleSignIn = async(username: string | null) => {
+    const googleSignIn = async() => {
         setLoading(true)
 
         signInWithPopup(auth, provider).then(async (userCredential) => {
