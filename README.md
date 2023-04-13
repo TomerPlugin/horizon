@@ -1,11 +1,13 @@
 <p align="center">
-  <img src="https://cdn-icons-png.flaticon.com/512/74/74525.png" alt="Horizon Icon" width="128" height="128" />
+  <a href="https://horizon-truehaiq.vercel.app/"> <img src="https://cdn-icons-png.flaticon.com/512/74/74525.png" alt="Horizon Icon" width="128" height="128" /> </a>
 </p>
 
 # Horizon: Fast, Secure, and User-Friendly Chat & Confrence Web Application
-
+ 
 Horizon is an online web-based chat application that enables secure and fast communication with multi-user conference rooms, built with React, Firebase and WebRTC.
 
+ ### <p align="center"> <a href="https://horizon-truehaiq.vercel.app/"><strong>➥ Live Demo</strong></a> <p>
+ 
 ## Features
 
 - **Multi-user conference rooms**: Users can join existing conference rooms or create their own to chat with multiple people at once.

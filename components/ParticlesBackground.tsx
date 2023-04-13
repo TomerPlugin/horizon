@@ -36,7 +36,7 @@ function ParticlesBackground() {
                     }
                 },
                 "color": {
-                    "value": "#000000"
+                    "value": "#7c3aed"
                 },
                 "shape": {
                     "type": "circle"
@@ -74,7 +74,7 @@ function ParticlesBackground() {
                 "line_linked": {
                     "enable": true,
                     "distance": 400,
-                    "color": "#000000",
+                    "color": "#7c3aed",
                     "opacity": 0.4,
                     "width": 2
                 },

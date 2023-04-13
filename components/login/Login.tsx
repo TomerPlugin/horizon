@@ -34,7 +34,7 @@ function Login() {
 
             <div className='flex flex-row items-cente space-x-4 lg:mx-52'>
                 <img src="/images/whale-tail.png" className='w-10 h-10' />
-                <h1 className='hidden md:inline text-2xl font-light '>HORIZON</h1>
+                <h1 className='hidden md:inline text-2xl font-light'>HORIZON</h1>
             </div>
 
             <div className='flex flex-row w-full h-full justify-center'>
