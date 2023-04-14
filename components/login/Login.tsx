@@ -11,7 +11,7 @@ import { CgPassword } from 'react-icons/cg';
 import GmailForm from '@/components/login/GmailForm';
 import { BsKey } from "react-icons/bs"
 import useAuth from '@/hooks/useAuth';
-import ParticlesBackground from '../ParticlesBackground';
+import ParticlesBackground from './ParticlesBackground';
 
 
 function Login() {

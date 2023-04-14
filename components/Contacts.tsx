@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react'
-import { DocumentData, collection, doc, getDocs, onSnapshot, query } from "firebase/firestore"; 
+import { DocumentData, collection, doc, getDocs, onSnapshot, query } from "firebase/firestore";
 import { db } from '@/firebase';
 import TimeAgo from 'timeago-react';
 import useAuth from '@/hooks/useAuth';
@@ -22,23 +22,23 @@ function Contacts() {
     useEffect(() => {
         onSnapshot(collection(db, 'users'), (usersSnapshot: any) => {
             let usersData: any = [];
-            
+
             usersSnapshot.docs.map((userDoc: any) =>
                 userDoc.data()?.uid != user?.uid && usersData.push(userDoc.data())
             )
-    
+
             setUsersList(usersData)
         })
     }, [db])
 
     function getUsers(){
         const querySnapshot = getDocs(collection(db, "users"));
-    
+
         let users: DocumentData[] = [];
         querySnapshot.then((res) => res.forEach((doc) => {
             doc.data().uid != users.push(doc.data())
         }));
-    
+
         return users
     }
 
@@ -70,7 +70,7 @@ function Contacts() {
                         rounded-lg
                         max-w-xl w-full
                         p-4 mb-3 mt-5'>
-                            
+
                         <input
                             value={searchInput}
                             onChange={handleSearchChange}
@@ -82,7 +82,7 @@ function Contacts() {
                             bg-color-2nd
                             outline-none
                             " />
-                            
+
                         <div>
                             <MagnifyingGlassIcon className='h-5 w-5'/>
                         </div>
@@ -94,7 +94,7 @@ function Contacts() {
                             <div key={u.displayName}
                             onClick={() => handleUserSelect(u)}
                             className='
-                            h-max 
+                            h-max
                             flex flex-row
                             p-3 pr-4 m-1
                             justify-between
@@ -116,7 +116,7 @@ function Contacts() {
                             </div>
                         )
                     }
-                    
+
                 </div>
             </div>
         </div>

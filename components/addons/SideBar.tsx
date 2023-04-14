@@ -5,19 +5,21 @@ import { BsFillBoxFill } from 'react-icons/bs'
 import { IoMdContacts } from 'react-icons/io'
 import { ArrowSmallLeftIcon, ChatBubbleOvalLeftEllipsisIcon, MoonIcon, SunIcon } from '@heroicons/react/24/solid'
 import { useState } from 'react'
-import Chat from './chat/Chat'
+import Chat from '../chat/Chat'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@/store/store'
 import { selectMainPage, setMainPageComponent, setMainPageTitle } from '@/store/slices/mainPageSlice'
-import Contacts from './Contacts'
-import VirtualRooms from './virtual-rooms/VirtualRooms'
+import Contacts from '../Contacts'
+import VirtualRooms from '../virtual-rooms/VirtualRooms'
 import { selectVirtualRoom } from '@/store/slices/virtualRoomSlice'
 import { selectChatInfo, setUser } from '@/store/slices/chatInfoSlice'
+import Options from '../options/Options'
 
-let isDarkMode = false;
+// let isDarkMode = false;
 
 function SideBar() {
 
+    const [isDarkMode, setIsDarkMode] = useState(false)
     const [modeIcon, setModeIcon] = useState(getModeIcon);
     const mainPage = useSelector(selectMainPage)
     const virtualRoom = useSelector(selectVirtualRoom)
@@ -30,7 +32,7 @@ function SideBar() {
         if(page === 'Chat'){dispatch(setMainPageComponent(<Chat />)) }
         else if(page === 'Contacts') dispatch(setMainPageComponent(<Contacts />))
         else if(page === 'Virtual Rooms') dispatch(setMainPageComponent(<VirtualRooms />))
-        else if(page === 'Options') dispatch(setMainPageComponent(<></>))
+        else if(page === 'Options') dispatch(setMainPageComponent(<Options />))
     }
 
     function getModeIcon() {
@@ -38,9 +40,9 @@ function SideBar() {
             : <SunIcon title="Change To Light Mode" className='clickable-icon' onClick={changeMode} />
     }
 
-    function changeMode() { 
-        // setIsDarkMode(!isDarkMode);
-        isDarkMode = !isDarkMode
+    function changeMode() {
+        setIsDarkMode(!isDarkMode);
+        // isDarkMode = !isDarkMode
         document?.documentElement.classList.toggle('dark')
         setModeIcon(getModeIcon)
     }
@@ -52,7 +54,7 @@ function SideBar() {
         bg-main-color
         sm:p-5 p-2
         '>
-            
+
             <ArrowSmallLeftIcon
             title='Return'
             onClick={() => dispatch(setUser(null))}
@@ -71,12 +73,12 @@ function SideBar() {
             ${mainPage.title == 'Chat' && chatInfo.user ? "hidden" : "inline"}
             lg:inline
             `}/>
-            
+
 
             <div className='
             h-full
             flex flex-row
-            sm:flex-col 
+            sm:flex-col
             justify-center
             space-x-2
             sm:space-x-0
@@ -87,7 +89,7 @@ function SideBar() {
                 onClick={() => handleBtnClick('Virtual Rooms')}
                 className={`clickable-icon ${mainPage.title.includes("Virtual Rooms") && 'icon-bg-hover'}`}
                 />
-                
+
                 <IoMdContacts
                 title='Contacts'
                 onClick={() => handleBtnClick('Contacts')}

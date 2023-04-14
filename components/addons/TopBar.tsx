@@ -2,10 +2,11 @@ import React, { Dispatch, SetStateAction } from 'react'
 import { BsFillBoxFill } from 'react-icons/bs'
 import { IoMdContacts } from 'react-icons/io'
 import { ChatBubbleOvalLeftEllipsisIcon, MagnifyingGlassIcon, BellIcon} from '@heroicons/react/24/solid'
-import useAuth from '../hooks/useAuth'
+import useAuth from '../../hooks/useAuth'
 import { GiHamburgerMenu } from 'react-icons/gi'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectMainPage } from '@/store/slices/mainPageSlice'
+import { selectMainPage, setMainPageComponent, setMainPageTitle } from '@/store/slices/mainPageSlice'
+import Options from '../options/Options'
 
 function TopBar() {
 
@@ -23,7 +24,7 @@ function TopBar() {
         else if (mainPage.title === 'Options')
             return <GiHamburgerMenu className='h-10 w-10 py-1.5'/>
     }
-        
+
     return (
         <header className='dragable w-full'>
             <div className='flex flex-row items-center'>
@@ -52,10 +53,11 @@ function TopBar() {
                     </div>
                 </div> */}
 
-                <BellIcon className='h-10 w-10 mx-2 p-1
-                clickable-icon'/>
+                {/* <BellIcon className='h-10 w-10 mx-2 p-1 clickable-icon'/> */}
 
-                <img src={user?.photoURL!} width="600" height="600" title={user?.displayName ?? ''} onClick={logout} className='
+                <img src={user?.photoURL!} width="600" height="600" title={user?.displayName ?? ''}
+                onClick={() => {dispatch(setMainPageTitle('Options')); dispatch(setMainPageComponent(<Options />))}}
+                className='
                 h-10 w-10 mx-1 rounded-full
                 outline-none
                 outline
